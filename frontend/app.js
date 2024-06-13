@@ -25,7 +25,7 @@ var popup = L.popup();
 function onMapClick(e) {
     L.marker(e.latlng).addTo(map);
 
-    fetch('./punti.json', {
+    fetch('http://localhost:9000/data/api/hello', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -34,7 +34,15 @@ function onMapClick(e) {
         mode: 'cors'
     })
     .then(response => {
+
         if (response.ok) {
+            response.json()
+                .then(data => {
+                    console.log('Response from server:', data);
+                })
+                .catch(error => {
+                    console.error('Error parsing response:', error);
+                });
             console.log('Coordinates written to punti.json');
         } else {
             console.log('Failed to write coordinates to punti.json');
