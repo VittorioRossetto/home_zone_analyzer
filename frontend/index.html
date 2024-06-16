@@ -3,11 +3,74 @@
     <head>
         <title>HomeZone</title>
         <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A==" crossorigin="" />
-         <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js" integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA==" crossorigin=""></script>
-      
+        <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js" integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA==" crossorigin=""></script>
+        <style>
+            #map {
+                height: 500px;
+            }
+            .dropdown {
+                position: absolute;
+                top: 10px;
+                right: 10px;
+                z-index: 1000;
+                background: white;
+                padding: 10px;
+                border-radius: 5px;
+                box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+            }
+            .dropdown label, .dropdown input, .dropdown button {
+                display: block;
+                margin: 5px 0;
+            }
+        </style>
     </head>
    <body>
     <div id="map" style="width: 1000px; height: 580px"></div>
+    <div class="dropdown">
+        <form id="survey-form">
+            <label for="slider-1">Quanto è importante una palestra nei dintorni:</label>
+            <input type="range" id="slider-1" name="slider1" min="0" max="5" value="0">
+            <span id="slider-1-value">0</span>
+
+            <label for="slider-2">Quanto è importante una chiesa nei dintorni:</label>
+            <input type="range" id="slider-2" name="slider2" min="0" max="5" value="0">
+            <span id="slider-2-value">0</span>
+
+            <label for="slider-3">Quanto è importante la presenza di una scuola:</label>
+            <input type="range" id="slider-3" name="slider3" min="0" max="5" value="0">
+            <span id="slider-3-value">0</span>
+
+            <label for="slider-4">Quanto è importante la presenza di un'università:</label>
+            <input type="range" id="slider-4" name="slider4" min="0" max="5" value="0">
+            <span id="slider-4-value">0</span>
+
+            <label for="slider-5">Quanto è importante la vicinanza all'ospedale:</label>
+            <input type="range" id="slider-5" name="slider5" min="0" max="5" value="0">
+            <span id="slider-5-value">0</span>
+
+            <label for="slider-6">Quanto è importante la presenza di almeno un parco:</label>
+            <input type="range" id="slider-6" name="slider6" min="0" max="5" value="0">
+            <span id="slider-6-value">0</span>
+
+            <label for="slider-7">Quanto è importante la presenza di un cinema:</label>
+            <input type="range" id="slider-7" name="slider7" min="0" max="5" value="0">
+            <span id="slider-7-value">0</span>
+
+            <label for="slider-8">Quanto è importante la presenza di almeno 2 fermate del bus:</label>
+            <input type="range" id="slider-8" name="slider8" min="0" max="5" value="0">
+            <span id="slider-8-value">0</span>
+
+            <label for="slider-9">Quanto è importante la presenza di un parcheggio:</label>
+            <input type="range" id="slider-9" name="slider9" min="0" max="5" value="0">
+            <span id="slider-9-value">0</span>
+
+            <label for="slider-10">Quanto è importante la vicinanza ad una stazione ferroviaria:</label>
+            <input type="range" id="slider-10" name="slider10" min="0" max="5" value="0">
+            <span id="slider-10-value">0</span>
+
+            <button type="submit">Submit</button>
+        </form>
+    </div>
     <script src="app.js"></script>
    </body>
 </html>

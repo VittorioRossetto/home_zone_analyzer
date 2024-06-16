@@ -9,10 +9,11 @@ app.use(cors());
 
 //ROUTES
 app.use("/data", require("./routes/hello"));
+app.use("/data", require("./routes/preferences"));
 
 
 app.listen(9000, () => 
     {
-        console.log("server started on port 9000");
+        console.log("server started on http://localhost:9000/");
     }
 );
