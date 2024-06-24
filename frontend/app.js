@@ -3,51 +3,47 @@ var mapOptions = {
     zoom: 14
 }
 
+var geoJsonColonnine = {};
+
+function fetchGeoJsonFiles(folderPath, color) {
+    fetch(folderPath)
+        .then(response => response.json())
+        .then(data => {
+            console.log('Fetched geojson file:', data);
+            L.geoJSON(data, {
+                pointToLayer: function (feature, latlng) {
+                    return L.circleMarker(latlng, {
+                        radius: 3,
+                        fillColor: color,
+                        color: "#000",
+                        weight: 1,
+                        opacity: 1,
+                        fillOpacity: 0.8
+                    });
+                }
+            }).addTo(map);
+        })
+        .catch(error => {
+            console.error('Error fetching geojson file:', error);
+        });
+}
+
+fetchGeoJsonFiles('geojson/colonnine-elettriche.geojson', 'green');
+fetchGeoJsonFiles('geojson/bagni-pubblici.geojson', 'blue');
+fetchGeoJsonFiles('geojson/attrezzature_ludiche_ginniche_sportive.geojson', 'red');
+fetchGeoJsonFiles('geojson/tper-fermate-autobus', 'orange');
+fetchGeoJsonFiles('geojson/bolognawifi-elenco-hot-spot', 'white');
+fetchGeoJsonFiles('geojson/farmacie.geojson', 'black');
+fetchGeoJsonFiles('geojson/sgambatura_cani.geojson', 'yellow');
+fetchGeoJsonFiles('geojson/teatri-cinema-teatri.geojson', 'brown');
+fetchGeoJsonFiles('geojson/carta-tecnica-comunale-toponimi-parchi-e-giardini.geojson', 'pink');
+
+
 var map = L.map('map', mapOptions);
 
 var popup = L.popup();
 
-// Funzione per aggiornare il valore mostrato degli slider
-function updateSliderValue(sliderId, valueId) {
-    document.getElementById(sliderId).addEventListener('input', function() {
-        document.getElementById(valueId).textContent = this.value;
-    });
-}
 
-// Aggiorna i valori per ciascuno slider
-for (let i = 1; i <= 10; i++) {
-    updateSliderValue(`slider-${i}`, `slider-${i}-value`);
-}
-
-// Gestione dell'invio del form
-// Gestione dell'invio del form
-document.getElementById('survey-form').addEventListener('submit', function(e) {
-    e.preventDefault();
-
-    // Raccogli i valori degli slider
-    let formData = {};
-    for (let i = 1; i <= 10; i++) {
-        formData[`slider${i}`] = document.getElementById(`slider-${i}`).value;
-    }
-
-    // Invia i dati al backend con fetch
-    fetch('http://localhost:9000/data/api/survey', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(formData)
-    })
-    .then(response => response.json())
-    .then(data => {
-        console.log('Success:', data);
-        alert('Survey submitted successfully!');
-    })
-    .catch((error) => {
-        console.error('Error:', error);
-        alert('Error submitting survey.');
-    });
-});
 
 function onMapClick(e) {
     L.marker(e.latlng).addTo(map);
@@ -61,19 +57,14 @@ function onMapClick(e) {
         mode: 'cors'
     })
     .then(response => {
-
-        if (response.ok) {
-            response.json()
-                .then(data => {
-                    console.log('Response from server:', data);
-                })
-                .catch(error => {
-                    console.error('Error parsing response:', error);
-                });
-            console.log('Coordinates written to punti.json');
-        } else {
-            console.log('Failed to write coordinates to punti.json');
-        }
+        response.json()
+            .then(data => {
+                console.log('Response from server:', data);
+            })
+            .catch(error => {
+                console.error('Error parsing response:', error);
+            });
+        
     })
     .catch(error => {
         console.error('Error writing coordinates to punti.json:', error);
