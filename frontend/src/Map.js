@@ -22,31 +22,87 @@ const Map = () => {
   const [parchi, setParchi] = useState('');
   const [poi, setPoi] = useState('');
   const [selectedMarkers, setSelectedMarkers] = useState([])
+  const areaCenter = useRef('')
+  const [areas, setAreas] = useState([]);
+  const switchVal = useRef(false)
+  const drawing = useRef(false)
 
 
-  function fetchGeoJsonFiles(folderPath, color) {
+  async function fetchGeoJsonFiles(path, color) {
     // Return the promise chain so the caller can use the eventual data
-    return fetch(folderPath)
-      .then(response => response.json())
-      .then(data => {
-        var layer = L.geoJSON(data, {
-          pointToLayer: function (feature, latlng) {
-            return L.circleMarker(latlng, {
-              radius: 3,
-              fillColor: color,
-              color: "#000",
-              weight: 1,
-              opacity: 1,
-              fillOpacity: 0.8
-            });
-          }
-        })
-        return layer; // This data will be available to the caller of fetchGeoJsonFiles
-      })
-      .catch(error => {
-        console.error('Error fetching geojson file:', error);
-        throw error; // Re-throw the error to ensure the caller can handle it
+    try {
+      const response = await fetch(path);
+      const data = await response.json();
+      var layer = L.geoJSON(data, {
+        pointToLayer: function (feature_1, latlng) {
+          return L.circleMarker(latlng, {
+            radius: 3,
+            fillColor: color,
+            color: "#000",
+            weight: 1,
+            opacity: 1,
+            fillOpacity: 0.8
+          });
+        }
       });
+      return layer;
+    } catch (error) {
+      console.error('Error fetching geojson file:', error);
+      throw error; // Re-throw the error to ensure the caller can handle it
+    }
+  }
+  
+  async function fetchPoIData(path) {
+    try {
+      const response = await fetch(path);
+      const data = await response.json();
+      const layer = L.geoJSON(data, {
+        pointToLayer: function (feature, latlng) {
+          let color;
+          switch (feature.properties.tipologia_punto_di_interesse) {
+            case "Biblioteca":
+              color = "purple";
+              break;
+            case "Musei, Gallerie, Luoghi e Teatri storici":
+              color = "orange";
+              break;
+            case "Evento":
+              color = "pink";
+              break;
+            case "Scuola":
+              color = "yellow";
+              break;
+            case "Struttura sanitaria":
+              color = "brown";
+              break;
+            case "Area verde":
+              color = "lightgreen";
+              break;
+            case "Casa di quartiere":
+              color = "lightblue";
+              break;
+            case "Area Ortiva":
+              color = "darkgreen";
+              break;
+            default:
+              color = "gray";
+              break;
+            }
+          return L.circleMarker(latlng, {
+            radius: 3,
+            fillColor: color,
+            color: "#000",
+            weight: 1,
+            opacity: 1,
+            fillOpacity: 0.8
+          });
+        }
+      });
+      return layer;
+    } catch (error) {
+      console.error('Error fetching PoI geojson file:', error);
+      throw error;
+    }
   }
 
   useEffect(() => {
@@ -71,13 +127,34 @@ const Map = () => {
     console.log("You clicked the map at " + e.latlng.toString());
   }
 
+  const draw = (e) => {
+    if(!drawing.current) {
+      drawing.current = true;
+      areaCenter.current = e.latlng
+      console.log('start drawing at: ' + e.latlng)
+    }
+    else{
+      console.log('center: ' + areaCenter.current + 'now: ' + e.latlng)
+      const radius = e.latlng.distanceTo(areaCenter.current);
+      const newCircle = L.circle(areaCenter.current, { radius }).addTo(map.current);
+      setAreas(prevAreas => [...prevAreas, newCircle]);
+      drawing.current = false;
+      console.log('stop drawing at: ' + e.latlng)
+    }
+  }
+
   useEffect(() => {
     if (map.current) return; // stops map from intializing more than once
 
     map.current = new L.Map(mapContainer.current, mapOptions);
 
     const baseLayer = new L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom: 19}).addTo(map.current);
-    map.current.on('click', onMapClick);
+    if(switchVal.current)
+      map.current.on('click', onMapClick);
+    else{
+      //map.current.off('click');
+      map.current.on('click', draw);
+    }
   }, [mapOptions]);
 
   useEffect(() => {
@@ -90,7 +167,7 @@ const Map = () => {
     fetchGeoJsonFiles('/geojson/sgambatura_cani.geojson', 'pink').then(data => setSgambamenti(data));
     fetchGeoJsonFiles('/geojson/teatri-cinema-teatri.geojson', 'brown').then(data => setTeatri(data));
     fetchGeoJsonFiles('/geojson/carta-tecnica-comunale-toponimi-parchi-e-giardini.geojson', 'gray').then(data => setParchi(data));  
-    fetchGeoJsonFiles('/geojson/PoI_complete.geojson', 'black').then(data => setPoi(data));
+    fetchPoIData('/geojson/PoI_complete.geojson', 'black').then(data => setPoi(data));
   }, []);
 
   const handleCheckboxChange = (e, data) => {
@@ -110,12 +187,31 @@ const Map = () => {
     setSelectedMarkers([]);
   }
 
+  const handleSwitchMode = () => {
+    switchVal.current = !switchVal.current
+    console.log(switchVal)
+  }
+
   return (
     <>
       <div className="map-wrap">
         <div ref={mapContainer} className="map" />
       </div>
+
       <button onClick={() => flushMarkers() }>Clear Markers</button>
+
+      <div className="switch">
+        <label>
+          <input type="checkbox" onChange={() => handleSwitchMode()} />
+          <span className="slider"></span>
+          <span className="switch-label">Left</span>
+        </label>
+        <label>
+          <span className="switch-label">Right</span>
+          <span className="slider"></span>
+        </label>
+      </div>
+
       <div className="legend">
         <label>
           <input type="checkbox" onChange={(e) => handleCheckboxChange(e, colonnine)} />
