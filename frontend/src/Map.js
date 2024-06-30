@@ -20,6 +20,8 @@ const Map = () => {
   const [sgambamenti, setSgambamenti] = useState('');
   const [teatri, setTeatri] = useState('');
   const [parchi, setParchi] = useState('');
+  const [poi, setPoi] = useState('');
+  const [selectedMarkers, setSelectedMarkers] = useState([])
 
 
   function fetchGeoJsonFiles(folderPath, color) {
@@ -47,15 +49,20 @@ const Map = () => {
       });
   }
 
+  useEffect(() => {
+    console.log(selectedMarkers);
+  }, [selectedMarkers]);
+
   const onMapClick = (e) => {
-    L.circleMarker(e.latlng, {
-          radius: 3,
+    const temp = L.circleMarker(e.latlng, {
+          radius: 5,
           fillColor: "red",
           color: "#000",
           weight: 1,
           opacity: 1,
           fillOpacity: 0.8
-      }).addTo(map.current);
+      }).addTo(map.current);    
+    setSelectedMarkers(prevMarkers => [...prevMarkers,  temp]);
 
     popup
       .setLatLng(e.latlng)
@@ -83,9 +90,10 @@ const Map = () => {
     fetchGeoJsonFiles('/geojson/sgambatura_cani.geojson', 'pink').then(data => setSgambamenti(data));
     fetchGeoJsonFiles('/geojson/teatri-cinema-teatri.geojson', 'brown').then(data => setTeatri(data));
     fetchGeoJsonFiles('/geojson/carta-tecnica-comunale-toponimi-parchi-e-giardini.geojson', 'gray').then(data => setParchi(data));  
+    fetchGeoJsonFiles('/geojson/PoI_complete.geojson', 'black').then(data => setPoi(data));
   }, []);
 
-  const handleCheckboxChange = (e, data, color) => {
+  const handleCheckboxChange = (e, data) => {
     if (e.target.checked) {
       console.log('Adding data to map:', data);
       data.addTo(map.current);
@@ -95,11 +103,19 @@ const Map = () => {
     }
   };
 
+  const flushMarkers = () => {
+    selectedMarkers.forEach(marker => {
+      map.current.removeLayer(marker);
+    });
+    setSelectedMarkers([]);
+  }
+
   return (
     <>
       <div className="map-wrap">
         <div ref={mapContainer} className="map" />
       </div>
+      <button onClick={() => flushMarkers() }>Clear Markers</button>
       <div className="legend">
         <label>
           <input type="checkbox" onChange={(e) => handleCheckboxChange(e, colonnine)} />
@@ -136,6 +152,10 @@ const Map = () => {
         <label>
           <input type="checkbox" onChange={(e) => handleCheckboxChange(e, parchi)} />
           Parchi
+        </label>
+        <label>
+          <input type="checkbox" onChange={(e) => handleCheckboxChange(e, poi)} />
+          PoI
         </label>
       </div>
     </>
