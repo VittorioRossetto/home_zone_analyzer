@@ -4,112 +4,95 @@ import L from "leaflet";
 import './css/map.css';
 
 const Map = () => {
-  const mapContainer = useRef(null);
-  const map = useRef(null);
-  const popup = L.popup();
-  const mapOptions = {
-    center: L.latLng(44.4937544, 11.3409058),
-    zoom: 14
-  }
-  const [colonnine, setColonnine] = useState('');
-  const [bagni, setBagni] = useState('');
-  const [attrezzature, setAttrezzature] = useState('');
-  const [fermateBus, setFermateBus] = useState('');
-  const [wifi, setWifi] = useState('');
-  const [farmacie, setFarmacie] = useState('');
-  const [sgambamenti, setSgambamenti] = useState('');
-  const [teatri, setTeatri] = useState('');
-  const [parchi, setParchi] = useState('');
-  const [poi, setPoi] = useState('');
-  const [selectedMarkers, setSelectedMarkers] = useState([])
-  const areaCenter = useRef('')
-  const [areas, setAreas] = useState([]);
-  const switchVal = useRef(false)
-  const drawing = useRef(false)
-
-
-  async function fetchGeoJsonFiles(path, color) {
-    // Return the promise chain so the caller can use the eventual data
-    try {
-      const response = await fetch(path);
-      const data = await response.json();
-      var layer = L.geoJSON(data, {
-        pointToLayer: function (feature_1, latlng) {
-          return L.circleMarker(latlng, {
-            radius: 3,
-            fillColor: color,
-            color: "#000",
-            weight: 1,
-            opacity: 1,
-            fillOpacity: 0.8
-          });
-        }
-      });
-      return layer;
-    } catch (error) {
-      console.error('Error fetching geojson file:', error);
-      throw error; // Re-throw the error to ensure the caller can handle it
+    const mapContainer = useRef(null);
+    const map = useRef(null);
+    const popup = L.popup();
+    const mapOptions = {
+        center: L.latLng(44.4937544, 11.3409058),
+        zoom: 14
     }
-  }
-  
+    const drawing = useRef(false);
+    const areaCenter = useRef(null);
+    const [areas, setAreas] = useState([]);
+    const drawMode = useRef(false);
+    const [selectedMarkers, setSelectedMarkers] = useState([]);
+    const [poiData, setPoiData] = useState(null);
+
   async function fetchPoIData(path) {
     try {
       const response = await fetch(path);
       const data = await response.json();
-      const layer = L.geoJSON(data, {
-        pointToLayer: function (feature, latlng) {
-          let color;
-          switch (feature.properties.tipologia_punto_di_interesse) {
-            case "Biblioteca":
-              color = "purple";
-              break;
-            case "Musei, Gallerie, Luoghi e Teatri storici":
-              color = "orange";
-              break;
-            case "Evento":
-              color = "pink";
-              break;
-            case "Scuola":
-              color = "yellow";
-              break;
-            case "Struttura sanitaria":
-              color = "brown";
-              break;
-            case "Area verde":
-              color = "lightgreen";
-              break;
-            case "Casa di quartiere":
-              color = "lightblue";
-              break;
-            case "Area Ortiva":
-              color = "darkgreen";
-              break;
-            default:
-              color = "gray";
-              break;
-            }
-          return L.circleMarker(latlng, {
-            radius: 3,
-            fillColor: color,
-            color: "#000",
-            weight: 1,
-            opacity: 1,
-            fillOpacity: 0.8
-          });
+      const poiData = {}; // Object to hold layers and points arrays for each PoI type
+  
+      // Function to determine the color based on the PoI type
+      const getColor = (type) => {
+        switch (type) {
+          case "Biblioteca": return "maroon";
+          case "Musei, Gallerie, Luoghi e Teatri storici": return "lime";
+          case "Evento":
+          case "Eventi e spettacoli": return "teal";
+          case "Scuola": return "silver";
+          case "Struttura sanitaria": return "olive";
+          case "Area verde": return "navy";
+          case "Casa di quartiere": return "fuchsia";
+          case "Area Ortiva": return "aqua";
+          case "Pista Ciclopedonale": return "lightgray";
+          case "Rastrelliera bici": return "darkgray";
+          case "Servizio extrascolastico": return "blue";
+          case "Zona pedonale": return "lightblue";
+          case "Aree di parcheggio": return "darkblue";
+          case "Parcheggi dotati di colonnine elettriche": return "cyan";
+          case "Sport e fitness": return "green";
+          case "Risorse sociali": return "lightgreen";
+          case "Fermate Tper": return "orange";
+          case "Area Wi-Fi": return "purple";
+          case "Stazione ferroviaria": return "red";
+          default: return "gray"; // Fallback color
         }
+      };
+  
+      // Iterate over each feature in the data
+      data.features.forEach((feature) => {
+        const type = feature.properties.tipologia_punto_di_interesse;
+        const color = getColor(type);
+  
+        // Initialize the data structure for this type if it doesn't exist
+        if (!poiData[type]) {
+          poiData[type] = { layer: L.layerGroup([]), points: [] };
+        }
+  
+        // Create a circle marker for this feature
+        const marker = L.circleMarker([feature.geometry.coordinates[1], feature.geometry.coordinates[0]], {
+          radius: 5,
+          fillColor: color,
+          color: "#000",
+          weight: 1,
+          opacity: 1,
+          fillOpacity: 0.8
+        });
+  
+        // Add the marker to the layer for this type
+        poiData[type].layer.addLayer(marker);
+  
+        // Add the point to the points array for this type
+        poiData[type].points.push({
+          coordinates: [feature.geometry.coordinates[1], feature.geometry.coordinates[0]],
+          type: feature.properties.tipologia_punto_di_interesse,
+          name: feature.properties.nome_punto_di_interesse,
+          area: feature.properties.nome_area,
+          min: [feature.properties['5_min'], feature.properties['10_min'], feature.properties['15_min']],
+        });
       });
-      return layer;
+  
+      return poiData; // Return the object containing all layers and points arrays
     } catch (error) {
       console.error('Error fetching PoI geojson file:', error);
       throw error;
     }
   }
 
-  useEffect(() => {
-    console.log(selectedMarkers);
-  }, [selectedMarkers]);
-
-  const onMapClick = (e) => {
+  const addMarker = (e) => {
+    // Create a marker and add it to the map
     const temp = L.circleMarker(e.latlng, {
           radius: 5,
           fillColor: "red",
@@ -117,9 +100,11 @@ const Map = () => {
           weight: 1,
           opacity: 1,
           fillOpacity: 0.8
-      }).addTo(map.current);    
+      }).addTo(map.current);  
+    // Add the marker to the selectedMarkers array  
     setSelectedMarkers(prevMarkers => [...prevMarkers,  temp]);
 
+    // Create a popup and display it
     popup
       .setLatLng(e.latlng)
       .setContent("You clicked the map at " + e.latlng.toString())
@@ -127,20 +112,26 @@ const Map = () => {
     console.log("You clicked the map at " + e.latlng.toString());
   }
 
-  const draw = (e) => {
+  const addArea = (e) => {
+    // if not drawing, start drawing
     if(!drawing.current) {
       drawing.current = true;
-      areaCenter.current = e.latlng
-      console.log('start drawing at: ' + e.latlng)
+      areaCenter.current = e.latlng // save the center of the area
     }
+    // if drawing, end drawing
     else{
-      console.log('center: ' + areaCenter.current + 'now: ' + e.latlng)
-      const radius = e.latlng.distanceTo(areaCenter.current);
-      const newCircle = L.circle(areaCenter.current, { radius }).addTo(map.current);
-      setAreas(prevAreas => [...prevAreas, newCircle]);
+      const radius = e.latlng.distanceTo(areaCenter.current); // calculate the radius of the area
+      const newCircle = L.circle(areaCenter.current, { radius }).addTo(map.current); // create the circle
+      setAreas(prevAreas => [...prevAreas, newCircle]); // add the circle to the areas array
       drawing.current = false;
-      console.log('stop drawing at: ' + e.latlng)
     }
+  }
+
+  const onMapClick = (e) => {
+    if(drawMode.current)
+      addMarker(e);
+    else
+      addArea(e);
   }
 
   useEffect(() => {
@@ -149,113 +140,61 @@ const Map = () => {
     map.current = new L.Map(mapContainer.current, mapOptions);
 
     const baseLayer = new L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom: 19}).addTo(map.current);
-    if(switchVal.current)
       map.current.on('click', onMapClick);
-    else{
-      //map.current.off('click');
-      map.current.on('click', draw);
-    }
   }, [mapOptions]);
 
-  useEffect(() => {
-    fetchGeoJsonFiles('/geojson/colonnine-elettriche.geojson', 'blue').then(data => setColonnine(data));
-    fetchGeoJsonFiles('/geojson/bagni-pubblici.geojson', 'green').then(data => setBagni(data));
-    fetchGeoJsonFiles('/geojson/attrezzature_ludiche_ginniche_sportive.geojson', 'red').then(data => setAttrezzature(data));
-    fetchGeoJsonFiles('/geojson/tper-fermate-autobus.geojson', 'orange').then(data => setFermateBus(data));
-    fetchGeoJsonFiles('/geojson/bolognawifi-elenco-hot-spot.geojson', 'purple').then(data => setWifi(data));
-    fetchGeoJsonFiles('/geojson/farmacie.geojson', 'yellow').then(data => setFarmacie(data));
-    fetchGeoJsonFiles('/geojson/sgambatura_cani.geojson', 'pink').then(data => setSgambamenti(data));
-    fetchGeoJsonFiles('/geojson/teatri-cinema-teatri.geojson', 'brown').then(data => setTeatri(data));
-    fetchGeoJsonFiles('/geojson/carta-tecnica-comunale-toponimi-parchi-e-giardini.geojson', 'gray').then(data => setParchi(data));  
-    fetchPoIData('/geojson/PoI_complete.geojson', 'black').then(data => setPoi(data));
-  }, []);
+    useEffect(() => {
+        fetchPoIData('/geojson/PoI_complete.geojson', 'black').then(data => setPoiData(data));
+    }, []);
 
-  const handleCheckboxChange = (e, data) => {
-    if (e.target.checked) {
-      console.log('Adding data to map:', data);
-      data.addTo(map.current);
-    } else {
-      console.log('Removing data from map:', data);
-      map.current.removeLayer(data);
+
+    const handleCheckboxChange = (e, data) => {
+        if (e.target.checked)
+            data.addTo(map.current);
+        else             
+            map.current.removeLayer(data);
+    };
+    
+    const flushMarkers = () => {
+        selectedMarkers.forEach(marker => {
+            map.current.removeLayer(marker);
+        });
+        setSelectedMarkers([]);
     }
-  };
 
-  const flushMarkers = () => {
-    selectedMarkers.forEach(marker => {
-      map.current.removeLayer(marker);
-    });
-    setSelectedMarkers([]);
-  }
+    const flushAreas = () => {
+        areas.forEach(area => {
+            map.current.removeLayer(area);
+        });
+        setAreas([]);
+    }
 
-  const handleSwitchMode = () => {
-    switchVal.current = !switchVal.current
-    console.log(switchVal)
-  }
-
-  return (
-    <>
-      <div className="map-wrap">
-        <div ref={mapContainer} className="map" />
-      </div>
-
-      <button onClick={() => flushMarkers() }>Clear Markers</button>
-
-      <div className="switch">
-        <label>
-          <input type="checkbox" onChange={() => handleSwitchMode()} />
-          <span className="slider"></span>
-          <span className="switch-label">Left</span>
-        </label>
-        <label>
-          <span className="switch-label">Right</span>
-          <span className="slider"></span>
-        </label>
-      </div>
-
-      <div className="legend">
-        <label>
-          <input type="checkbox" onChange={(e) => handleCheckboxChange(e, colonnine)} />
-          Colonnine
-        </label>
-        <label>
-          <input type="checkbox" onChange={(e) => handleCheckboxChange(e, bagni)} />
-          Bagni
-        </label>
-        <label>
-          <input type="checkbox" onChange={(e) => handleCheckboxChange(e, attrezzature)} />
-          Attrezzature Sportive
-        </label>
-        <label>
-          <input type="checkbox" onChange={(e) => handleCheckboxChange(e, fermateBus)} />
-          Fermate Bus
-        </label>
-        <label>
-          <input type="checkbox" onChange={(e) => handleCheckboxChange(e, wifi)} />
-          Wifi
-        </label>
-        <label>
-          <input type="checkbox" onChange={(e) => handleCheckboxChange(e, farmacie)} />
-          Farmacie
-        </label>
-        <label>
-          <input type="checkbox" onChange={(e) => handleCheckboxChange(e, sgambamenti)} />
-          Sgambamenti
-        </label>
-        <label>
-          <input type="checkbox" onChange={(e) => handleCheckboxChange(e, teatri)} />
-          Teatri
-        </label>
-        <label>
-          <input type="checkbox" onChange={(e) => handleCheckboxChange(e, parchi)} />
-          Parchi
-        </label>
-        <label>
-          <input type="checkbox" onChange={(e) => handleCheckboxChange(e, poi)} />
-          PoI
-        </label>
-      </div>
-    </>
-  );
+    return (
+        <div>
+            <div className="map-wrap">
+                <div ref={mapContainer} className="map" />
+            </div>
+            <div className='menu'>
+                <h1>Home Zone<br/>Analyzer</h1>
+                <div className="poi-checkboxes">
+                    {poiData && Object.keys(poiData).map((type, index) => (
+                        <div key={index}>
+                            <input type="checkbox" id={type} name={type} onChange={(e) => handleCheckboxChange(e, poiData[type].layer)} />
+                            <label htmlFor={type}>{type}</label>
+                        </div>
+                    ))}
+                </div>
+                <div>
+                  <h4>Selection mode: {drawMode.current ? "Marker" : "Area"}</h4>
+                  <button onClick={() => drawMode.current = !drawMode.current}>Switch</button>
+                  <br/>
+                </div>
+                <div className="buttons">
+                    <button onClick={flushMarkers}>Flush Markers</button>
+                    <button onClick={flushAreas}>Flush Areas</button>
+                </div>
+            </div>
+        </div>
+    );
 }
-
 export default Map;

@@ -1,0 +1,46 @@
+.dropdown {
+    max-width: 600px; /* Limit the width of the form */
+    margin: auto; /* Center the form on the page */
+    padding: 20px;
+    background-color: #f4f4f4; /* Light grey background */
+    border-radius: 8px; /* Rounded corners */
+  }
+  
+  form#survey-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px; /* Space between form elements */
+  }
+  
+  form#survey-form label {
+    margin-bottom: 5px; /* Space between label and slider */
+  }
+  
+  form#survey-form .slider-group {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  input[type="range"] {
+    cursor: pointer; /* Change cursor on hover over the slider */
+  }
+  
+  span {
+    margin-top: 5px; /* Space between slider and its value display */
+    font-size: 0.9rem; /* Smaller font size for the value */
+    color: #333; /* Dark grey color for better readability */
+  }
+  
+  button[type="submit"] {
+    padding: 10px 20px;
+    font-size: 1rem;
+    color: white;
+    background-color: #007bff; /* Bootstrap primary color */
+    border: none;
+    border-radius: 5px;
+    cursor: pointer; /* Change cursor on hover over the button */
+  }
+  
+  button[type="submit"]:hover {
+    background-color: #0056b3; /* Darker shade on hover */
+  }
