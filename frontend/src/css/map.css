@@ -23,3 +23,67 @@
   padding: 20px; /* Padding inside the sidebar */
   box-shadow: 2px 0 5px rgba(0,0,0,0.5); /* Shadow effect */
 }
+
+/* Styling for the main heading */
+h1 {
+  color: #333;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+/* Styling for the poi-checkboxes container */
+.poi-checkboxes {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+/* Styling for each checkbox and label */
+.poi-checkboxes div {
+  display: flex;
+  align-items: center;
+}
+
+input[type="checkbox"] {
+  margin-right: 5px;
+}
+
+label {
+  margin: 0;
+  font-size: 16px;
+  color: #555;
+}
+
+/* Styling for the header */
+h4 {
+  color: #333;
+  margin-bottom: 15px;
+}
+
+/* Styling for buttons */
+button {
+  background-color: #007bff; /* Blue */
+  border: none;
+  color: white;
+  padding: 10px 20px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 4px 2px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background-color 0.3s ease;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+/* Styling for the button container */
+.buttons {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 20px;
+}

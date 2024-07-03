@@ -1,22 +1,43 @@
 import React, { useRef, useEffect, useState } from 'react';
 import "leaflet/dist/leaflet.css";
+import { useLocation } from 'react-router-dom';
 import L from "leaflet";
 import './css/map.css';
 
+
 const Map = () => {
-    const mapContainer = useRef(null);
-    const map = useRef(null);
-    const popup = L.popup();
-    const mapOptions = {
-        center: L.latLng(44.4937544, 11.3409058),
-        zoom: 14
+  const location = useLocation();
+  const formData = location.state;
+  
+  const mapContainer = useRef(null);
+  const map = useRef(null);
+  const popup = L.popup();
+  const mapOptions = {
+    center: L.latLng(44.4937544, 11.3409058),
+    zoom: 14
+  }
+  const drawing = useRef(false);
+  const areaCenter = useRef(null);
+  const [areas, setAreas] = useState([]);
+  const drawMode = useRef(true);
+  const [selectedMarkers, setSelectedMarkers] = useState([]);
+  const [poiData, setPoiData] = useState(null);
+
+  function sum( obj ) {
+    // Function to sum all the values of an object
+    var sum = 0;
+    for( var el in obj ) {
+      if( obj.hasOwnProperty( el ) ) {
+        sum += parseFloat( obj[el] );
+      }
     }
-    const drawing = useRef(false);
-    const areaCenter = useRef(null);
-    const [areas, setAreas] = useState([]);
-    const drawMode = useRef(false);
-    const [selectedMarkers, setSelectedMarkers] = useState([]);
-    const [poiData, setPoiData] = useState(null);
+    return sum;
+  }
+
+  useEffect(() => {
+    if (!formData) return;
+    console.log('Form data received:', formData);
+  }, [formData]);
 
   async function fetchPoIData(path) {
     try {
@@ -91,12 +112,44 @@ const Map = () => {
     }
   }
 
+  const setMarkerColor = (center, radius) => {
+    if (poiData && poiData["Biblioteca"]) {
+      if(sum(formData) == 0) return 'gray' // If no data is provided, return gray as default color
+      let satisfaction = 0;
+      // Iterate over the PoI data
+      Object.keys(formData).forEach(key => {
+        if (poiData[key] && Array.isArray(poiData[key].points) && formData[key] > 0) {
+          // poiData[key] exists and is an array, now iterate over the points
+          poiData[key].points.forEach(point => {
+            if (center.distanceTo(point.coordinates) <= radius) {
+              // If the point is within the radius, calculate the satisfaction
+              satisfaction += formData[key];
+              console.log("Satisfaction:", formData[key]);
+              return;
+            }
+            console.log(point);
+          });
+        }
+      });
+      // Set the color based on the satisfaction
+      const satisfactionPercentage = satisfaction / sum(formData) * 100;
+      if (satisfactionPercentage >= 75) return 'green';
+      else if (satisfactionPercentage >= 50) return 'yellow';
+      else if (satisfactionPercentage >= 25) return 'orange';
+      else return 'red';
+
+    } else {
+      console.error("No PoI data available");
+    }
+  };
+
   const addMarker = (e) => {
     // Create a marker and add it to the map
+    const color = setMarkerColor(e.latlng, 200);
     const temp = L.circleMarker(e.latlng, {
           radius: 5,
-          fillColor: "red",
-          color: "#000",
+          fillColor: color,
+          color: color,
           weight: 1,
           opacity: 1,
           fillOpacity: 0.8
@@ -121,7 +174,8 @@ const Map = () => {
     // if drawing, end drawing
     else{
       const radius = e.latlng.distanceTo(areaCenter.current); // calculate the radius of the area
-      const newCircle = L.circle(areaCenter.current, { radius }).addTo(map.current); // create the circle
+      const color = setMarkerColor(areaCenter.current, radius); // choose color based on center and radius
+      const newCircle = L.circle(areaCenter.current, { radius, color }).addTo(map.current); // create the circle with chosen color
       setAreas(prevAreas => [...prevAreas, newCircle]); // add the circle to the areas array
       drawing.current = false;
     }
@@ -138,15 +192,19 @@ const Map = () => {
     if (map.current) return; // stops map from intializing more than once
 
     map.current = new L.Map(mapContainer.current, mapOptions);
-
-    const baseLayer = new L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom: 19}).addTo(map.current);
-      map.current.on('click', onMapClick);
+    new L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom: 19}).addTo(map.current); 
+       
   }, [mapOptions]);
 
     useEffect(() => {
-        fetchPoIData('/geojson/PoI_complete.geojson', 'black').then(data => setPoiData(data));
+        fetchPoIData('/geojson/PoI_complete.geojson').then(data => setPoiData(data));
     }, []);
 
+    useEffect(() => {
+      if (poiData) {
+        map.current.on('click', onMapClick); // Add the click event listener to the map only after the PoI data has been loaded
+      }
+    }, [poiData]);
 
     const handleCheckboxChange = (e, data) => {
         if (e.target.checked)

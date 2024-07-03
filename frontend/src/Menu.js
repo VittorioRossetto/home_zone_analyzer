@@ -1,7 +1,9 @@
 import React, { useEffect } from "react";
+import { useNavigate } from 'react-router-dom'; 
 import './css/survey.css';
 
 const Menu = () => {
+    const navigate = useNavigate(); 
 
     const handleSliderChange = (event) => {
         const sliderId = event.target.id;
@@ -34,6 +36,7 @@ const Menu = () => {
         }
         // Do something with the JSON data
         console.log(jsonData);
+        navigate('/map', { state: jsonData });
         // Reset the form
         form.reset();
     }
@@ -42,81 +45,77 @@ const Menu = () => {
     return (
         <div className="dropdown">
             <form id="survey-form" onSubmit={handleSubmit}>
-                <label htmlFor="slider-1">Quanto è importante la presenza di una biblioteca nel vicinato:</label>
-                <input type="range" id="slider-1" name="slider1" min="0" max="5" defaultValue="0" />
-                <span id="slider-1-value">0</span>
+                <label htmlFor="slider-Biblioteca">Quanto è importante la presenza di una biblioteca nel vicinato:</label>
+                <input type="range" id="slider-Biblioteca" name="Biblioteca" min="0" max="5" defaultValue="0" />
+                <span id="slider-Biblioteca-value">0</span>
 
-                <label htmlFor="slider-2">Quanto è importante la presenza di almeno un museo o galleria nel vicinato:</label>
-                <input type="range" id="slider-2" name="slider2" min="0" max="5" defaultValue="0" />
-                <span id="slider-2-value">0</span>
+                <label htmlFor="slider-EventiSpettacoli">Quanto è importante avere eventi o spettacoli regolari nel vicinato:</label>
+                <input type="range" id="slider-EventiSpettacoli" name="Eventi e spettacoli" min="0" max="5" defaultValue="0" />
+                <span id="slider-EventiSpettacoli-value">0</span>
 
-                <label htmlFor="slider-3">Quanto è importante avere eventi o spettacoli regolari nel vicinato:</label>
-                <input type="range" id="slider-3" name="slider3" min="0" max="5" defaultValue="0" />
-                <span id="slider-3-value">0</span>
+                <label htmlFor="slider-Scuola">Quanto è importante la presenza di una scuola di buon livello nel vicinato:</label>
+                <input type="range" id="slider-Scuola" name="Scuola" min="0" max="5" defaultValue="0" />
+                <span id="slider-Scuola-value">0</span>
 
-                <label htmlFor="slider-4">Quanto è importante la presenza di una scuola di buon livello nel vicinato:</label>
-                <input type="range" id="slider-4" name="slider4" min="0" max="5" defaultValue="0" />
-                <span id="slider-4-value">0</span>
+                <label htmlFor="slider-StrutturaSanitaria">Quanto è importante la presenza di una struttura sanitaria nel vicinato:</label>
+                <input type="range" id="slider-StrutturaSanitaria" name="Struttura sanitaria" min="0" max="5" defaultValue="0" />
+                <span id="slider-StrutturaSanitaria-value">0</span>
 
-                <label htmlFor="slider-5">Quanto è importante la presenza di una struttura sanitaria nel vicinato:</label>
-                <input type="range" id="slider-5" name="slider5" min="0" max="5" defaultValue="0" />
-                <span id="slider-5-value">0</span>
+                <label htmlFor="slider-AreaVerde">Quanto è importante la presenza di aree verdi nel vicinato:</label>
+                <input type="range" id="slider-AreaVerde" name="Area verde" min="0" max="5" defaultValue="0" />
+                <span id="slider-AreaVerde-value">0</span>
 
-                <label htmlFor="slider-6">Quanto è importante la presenza di aree verdi nel vicinato:</label>
-                <input type="range" id="slider-6" name="slider6" min="0" max="5" defaultValue="0" />
-                <span id="slider-6-value">0</span>
+                <label htmlFor="slider-CasaDiQuartiere">Quanto è importante la presenza di una casa di quartiere nel vicinato:</label>
+                <input type="range" id="slider-CasaDiQuartiere" name="Casa di quartiere" min="0" max="5" defaultValue="0" />
+                <span id="slider-CasaDiQuartiere-value">0</span>
 
-                <label htmlFor="slider-7">Quanto è importante la presenza di una casa di quartiere nel vicinato:</label>
-                <input type="range" id="slider-7" name="slider7" min="0" max="5" defaultValue="0" />
-                <span id="slider-7-value">0</span>
+                <label htmlFor="slider-AreaOrtiva">Quanto è importante la presenza di un'area ortiva nel vicinato:</label>
+                <input type="range" id="slider-AreaOrtiva" name="Area Ortiva" min="0" max="5" defaultValue="0" />
+                <span id="slider-AreaOrtiva-value">0</span>
 
-                <label htmlFor="slider-8">Quanto è importante la presenza di un'area ortiva nel vicinato:</label>
-                <input type="range" id="slider-8" name="slider8" min="0" max="5" defaultValue="0" />
-                <span id="slider-8-value">0</span>
+                <label htmlFor="slider-PistaCiclopedonale">Quanto è importante la presenza di una pista ciclopedonale nel vicinato:</label>
+                <input type="range" id="slider-PistaCiclopedonale" name="Pista Ciclopedonale" min="0" max="5" defaultValue="0" />
+                <span id="slider-PistaCiclopedonale-value">0</span>
 
-                <label htmlFor="slider-9">Quanto è importante la presenza di una pista ciclopedonale nel vicinato:</label>
-                <input type="range" id="slider-9" name="slider9" min="0" max="5" defaultValue="0" />
-                <span id="slider-9-value">0</span>
+                <label htmlFor="slider-RastrellieraBici">Quanto è importante la presenza di rastrelliere per bici nel vicinato:</label>
+                <input type="range" id="slider-RastrellieraBici" name="Rastrelliera bici" min="0" max="5" defaultValue="0" />
+                <span id="slider-RastrellieraBici-value">0</span>
 
-                <label htmlFor="slider-10">Quanto è importante la presenza di rastrelliere per bici nel vicinato:</label>
-                <input type="range" id="slider-10" name="slider10" min="0" max="5" defaultValue="0" />
-                <span id="slider-10-value">0</span>
+                <label htmlFor="slider-ServizioExtrascolastico">Quanto è importante la presenza di servizi extrascolastici nel vicinato:</label>
+                <input type="range" id="slider-ServizioExtrascolastico" name="Servizio extrascolastico" min="0" max="5" defaultValue="0" />
+                <span id="slider-ServizioExtrascolastico-value">0</span>
 
-                <label htmlFor="slider-11">Quanto è importante la presenza di servizi extrascolastici nel vicinato:</label>
-                <input type="range" id="slider-11" name="slider11" min="0" max="5" defaultValue="0" />
-                <span id="slider-11-value">0</span>
+                <label htmlFor="slider-ZonaPedonale">Quanto è importante la presenza di zone pedonali nel vicinato:</label>
+                <input type="range" id="slider-ZonaPedonale" name="Zona pedonale" min="0" max="5" defaultValue="0" />
+                <span id="slider-ZonaPedonale-value">0</span>
 
-                <label htmlFor="slider-12">Quanto è importante la presenza di zone pedonali nel vicinato:</label>
-                <input type="range" id="slider-12" name="slider12" min="0" max="5" defaultValue="0" />
-                <span id="slider-12-value">0</span>
+                <label htmlFor="slider-AreeDiParcheggio">Quanto è importante la presenza di aree di parcheggio nel vicinato:</label>
+                <input type="range" id="slider-AreeDiParcheggio" name="Aree di parcheggio" min="0" max="5" defaultValue="0" />
+                <span id="slider-AreeDiParcheggio-value">0</span>
 
-                <label htmlFor="slider-13">Quanto è importante la presenza di aree di parcheggio nel vicinato:</label>
-                <input type="range" id="slider-13" name="slider13" min="0" max="5" defaultValue="0" />
-                <span id="slider-13-value">0</span>
+                <label htmlFor="slider-ParcheggiColonnineElettriche">Quanto è importante la presenza di parcheggi con colonnine elettriche nel vicinato:</label>
+                <input type="range" id="slider-ParcheggiColonnineElettriche" name="Parcheggi dotati di colonnine elettriche" min="0" max="5" defaultValue="0" />
+                <span id="slider-ParcheggiColonnineElettriche-value">0</span>
 
-                <label htmlFor="slider-14">Quanto è importante la presenza di parcheggi con colonnine elettriche nel vicinato:</label>
-                <input type="range" id="slider-14" name="slider14" min="0" max="5" defaultValue="0" />
-                <span id="slider-14-value">0</span>
+                <label htmlFor="slider-SportEFitness">Quanto è importante la presenza di strutture per sport e fitness nel vicinato:</label>
+                <input type="range" id="slider-SportEFitness" name="Sport e fitness" min="0" max="5" defaultValue="0" />
+                <span id="slider-SportEFitness-value">0</span>
 
-                <label htmlFor="slider-15">Quanto è importante la presenza di strutture per sport e fitness nel vicinato:</label>
-                <input type="range" id="slider-15" name="slider15" min="0" max="5" defaultValue="0" />
-                <span id="slider-15-value">0</span>
+                <label htmlFor="slider-RisorseSociali">Quanto è importante la presenza di risorse sociali nel vicinato:</label>
+                <input type="range" id="slider-RisorseSociali" name="Risorse sociali" min="0" max="5" defaultValue="0" />
+                <span id="slider-RisorseSociali-value">0</span>
 
-                <label htmlFor="slider-16">Quanto è importante la presenza di risorse sociali nel vicinato:</label>
-                <input type="range" id="slider-16" name="slider16" min="0" max="5" defaultValue="0" />
-                <span id="slider-16-value">0</span>
+                <label htmlFor="slider-FermateTper">Quanto è importante la presenza di fermate del trasporto pubblico (Tper) nel vicinato:</label>
+                <input type="range" id="slider-FermateTper" name="Fermate Tper" min="0" max="5" defaultValue="0" />
+                <span id="slider-FermateTper-value">0</span>
 
-                <label htmlFor="slider-17">Quanto è importante la presenza di fermate del trasporto pubblico (Tper) nel vicinato:</label>
-                <input type="range" id="slider-17" name="slider17" min="0" max="5" defaultValue="0" />
-                <span id="slider-17-value">0</span>
+                <label htmlFor="slider-AreaWiFi">Quanto è importante la presenza di aree Wi-Fi nel vicinato:</label>
+                <input type="range" id="slider-AreaWiFi" name="Area Wi-Fi" min="0" max="5" defaultValue="0" />
+                <span id="slider-AreaWiFi-value">0</span>
 
-                <label htmlFor="slider-18">Quanto è importante la presenza di aree Wi-Fi nel vicinato:</label>
-                <input type="range" id="slider-18" name="slider18" min="0" max="5" defaultValue="0" />
-                <span id="slider-18-value">0</span>
-
-                <label htmlFor="slider-19">Quanto è importante la presenza di una stazione ferroviaria nel vicinato:</label>
-                <input type="range" id="slider-19" name="slider19" min="0" max="5" defaultValue="0" />
-                <span id="slider-19-value">0</span>
+                <label htmlFor="slider-StazioneFerroviaria">Quanto è importante la presenza di una stazione ferroviaria nel vicinato:</label>
+                <input type="range" id="slider-StazioneFerroviaria" name="Stazione ferroviaria" min="0" max="5" defaultValue="0" />
+                <span id="slider-StazioneFerroviaria-value">0</span>
 
                 <button type="submit">Submit</button>
             </form>
