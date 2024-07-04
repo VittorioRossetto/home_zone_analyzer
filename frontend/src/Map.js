@@ -22,6 +22,7 @@ const Map = () => {
   const drawMode = useRef(true);
   const [selectedMarkers, setSelectedMarkers] = useState([]);
   const [poiData, setPoiData] = useState(null);
+  const neighborhood = useRef(200);
 
   function sum( obj ) {
     // Function to sum all the values of an object
@@ -127,7 +128,6 @@ const Map = () => {
               console.log("Satisfaction:", formData[key]);
               return;
             }
-            console.log(point);
           });
         }
       });
@@ -145,8 +145,8 @@ const Map = () => {
 
   const addMarker = (e) => {
     // Create a marker and add it to the map
-    const color = setMarkerColor(e.latlng, 200);
-    const temp = L.circleMarker(e.latlng, {
+    const color = setMarkerColor(e.latlng, neighborhood.current);
+    const marker = L.circleMarker(e.latlng, {
           radius: 5,
           fillColor: color,
           color: color,
@@ -154,15 +154,17 @@ const Map = () => {
           opacity: 1,
           fillOpacity: 0.8
       }).addTo(map.current);  
-    // Add the marker to the selectedMarkers array  
-    setSelectedMarkers(prevMarkers => [...prevMarkers,  temp]);
 
+    console.log("Marker:", marker);
+    // Add the marker to the selectedMarkers array  
+    setSelectedMarkers(prevMarkers => [...prevMarkers,  marker]);
+    
     // Create a popup and display it
-    popup
+    /*popup
       .setLatLng(e.latlng)
       .setContent("You clicked the map at " + e.latlng.toString())
       .openOn(map.current);
-    console.log("You clicked the map at " + e.latlng.toString());
+    console.log("You clicked the map at " + e.latlng.toString());*/
   }
 
   const addArea = (e) => {
@@ -227,6 +229,41 @@ const Map = () => {
         setAreas([]);
     }
 
+    const handleNeighborhoodChange = (e) => {
+      e.preventDefault();
+      const neighborhoodValue = document.getElementById("neighborhood").value;
+
+      // Check if the inserted value is a number
+      if (isNaN(neighborhoodValue)) {
+        alert("Please insert a number");
+        return;
+      } else {
+        console.log("Value to use:", neighborhoodValue);
+        neighborhood.current = neighborhoodValue;
+        console.log("Neighborhood set to:", neighborhood.current);
+      }
+    };
+
+    function removeMarker(markerToRemove) {
+      // Remove the marker from the map
+      map.current.removeLayer(markerToRemove);
+    
+      // Update the selectedMarkers state to exclude the removed marker
+      setSelectedMarkers(currentMarkers =>
+        currentMarkers.filter(marker => marker !== markerToRemove)
+      );
+    }
+
+    function removeArea(areaToRemove) {
+      // Assuming you have a reference to your map instance similar to markers
+      map.current.removeLayer(areaToRemove);
+    
+      // Update the areas state to exclude the removed area
+      setAreas(currentAreas =>
+        currentAreas.filter(area => area !== areaToRemove)
+      );
+    }
+
     return (
         <div>
             <div className="map-wrap">
@@ -247,10 +284,41 @@ const Map = () => {
                   <button onClick={() => drawMode.current = !drawMode.current}>Switch</button>
                   <br/>
                 </div>
+                <div>
+                  <label htmlFor="neighborhood">Neighborhood: </label>
+                  <input type="text" id="neighborhood" name="neighborhood" placeholder={neighborhood.current}/>
+                  <button onClick={handleNeighborhoodChange}>Set neighborhood</button>
+                </div>
                 <div className="buttons">
                     <button onClick={flushMarkers}>Flush Markers</button>
                     <button onClick={flushAreas}>Flush Areas</button>
                 </div>
+            </div>
+            <div className='selected-list'>
+                <h2>Selected Markers</h2>
+                <ul>
+                  {selectedMarkers.map((marker, index) => (
+                    <React.Fragment key={index}>
+                      <h4>Marker {index}</h4>
+                      <li>{marker.getLatLng().toString()}</li>
+                      <li>Satisfaction:</li>
+                      <li style={{ color: marker.options.color.toString()}}> {marker.options.color.toString()}</li>
+                      <button onClick={() => removeMarker(marker)}>Remove</button>
+                    </React.Fragment>    
+                  ))}
+                </ul>
+                <h2>Selected Areas</h2>
+                <ul>
+                    {areas.map((area, index) => (
+                        <React.Fragment key={index}>
+                          <h4>Area {index}</h4>
+                          <li>{area.getLatLng().toString()} - {area.getRadius()}</li>
+                          <li>Satisfaction:</li>
+                          <li style={{ color: area.options.color.toString()}}> {area.options.color.toString()}</li>
+                          <button onClick={() => removeArea(area)}>Remove</button>
+                        </React.Fragment>
+                    ))}
+                </ul>
             </div>
         </div>
     );

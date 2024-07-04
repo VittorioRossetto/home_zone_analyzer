@@ -44,6 +44,8 @@ const Menu = () => {
 
     return (
         <div className="dropdown">
+            <h1>Home Zone Analyzer</h1>
+            <p>Questo questionario ti permetterà di esprimere la tua opinione riguardo le caratteristiche del tuo vicinato.</p>
             <form id="survey-form" onSubmit={handleSubmit}>
                 <label htmlFor="slider-Biblioteca">Quanto è importante la presenza di una biblioteca nel vicinato:</label>
                 <input type="range" id="slider-Biblioteca" name="Biblioteca" min="0" max="5" defaultValue="0" />
