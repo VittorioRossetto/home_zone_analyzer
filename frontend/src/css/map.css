@@ -1,3 +1,7 @@
+* {
+  font-family: Arial, sans-serif;
+}
+
 .map-wrap {
   position: relative;
   width: 100%;

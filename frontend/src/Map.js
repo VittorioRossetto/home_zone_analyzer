@@ -11,7 +11,8 @@ const Map = () => {
   
   const mapContainer = useRef(null);
   const map = useRef(null);
-  const popup = L.popup();
+  //const popup = L.popup();
+  // eslint-disable-next-line
   const mapOptions = {
     center: L.latLng(44.4937544, 11.3409058),
     zoom: 14
@@ -55,9 +56,9 @@ const Map = () => {
           case "Eventi e spettacoli": return "teal";
           case "Scuola": return "silver";
           case "Struttura sanitaria": return "olive";
-          case "Area verde": return "navy";
+          case "Area verde": return "yellow";
           case "Casa di quartiere": return "fuchsia";
-          case "Area Ortiva": return "aqua";
+          case "Area Ortiva": return "brown";
           case "Pista Ciclopedonale": return "lightgray";
           case "Rastrelliera bici": return "darkgray";
           case "Servizio extrascolastico": return "blue";
@@ -80,7 +81,7 @@ const Map = () => {
   
         // Initialize the data structure for this type if it doesn't exist
         if (!poiData[type]) {
-          poiData[type] = { layer: L.layerGroup([]), points: [] };
+          poiData[type] = { layer: L.layerGroup([]), points: [], color: color };
         }
   
         // Create a circle marker for this feature
@@ -105,7 +106,7 @@ const Map = () => {
           min: [feature.properties['5_min'], feature.properties['10_min'], feature.properties['15_min']],
         });
       });
-  
+      //console.log("PoI data:", poiData);
       return poiData; // Return the object containing all layers and points arrays
     } catch (error) {
       console.error('Error fetching PoI geojson file:', error);
@@ -113,24 +114,30 @@ const Map = () => {
     }
   }
 
+
+  const calculateSatisfactionForPoint = (center, radius) => {
+    let satisfaction = 0;
+
+    Object.keys(formData).forEach(key => {
+      if (poiData[key] && Array.isArray(poiData[key].points) && formData[key] > 0) {
+        // poiData[key] exists and is an array, now iterate over the points
+        poiData[key].points.forEach(point => {
+          if (center.distanceTo(point.coordinates) <= radius) {
+            // If the point is within the radius, calculate the satisfaction
+            satisfaction += formData[key];
+            // console.log("Satisfaction:", formData[key]);
+            return;
+          }
+        });
+      }
+    });
+    return satisfaction;
+  }
+
   const setMarkerColor = (center, radius) => {
     if (poiData && poiData["Biblioteca"]) {
-      if(sum(formData) == 0) return 'gray' // If no data is provided, return gray as default color
-      let satisfaction = 0;
-      // Iterate over the PoI data
-      Object.keys(formData).forEach(key => {
-        if (poiData[key] && Array.isArray(poiData[key].points) && formData[key] > 0) {
-          // poiData[key] exists and is an array, now iterate over the points
-          poiData[key].points.forEach(point => {
-            if (center.distanceTo(point.coordinates) <= radius) {
-              // If the point is within the radius, calculate the satisfaction
-              satisfaction += formData[key];
-              console.log("Satisfaction:", formData[key]);
-              return;
-            }
-          });
-        }
-      });
+      if(sum(formData) === 0) return 'gray' // If no data is provided, return gray as default color
+      let satisfaction = calculateSatisfactionForPoint(center, radius);
       // Set the color based on the satisfaction
       const satisfactionPercentage = satisfaction / sum(formData) * 100;
       if (satisfactionPercentage >= 75) return 'green';
@@ -143,6 +150,61 @@ const Map = () => {
     }
   };
 
+  // We generate a grid of points within a circle of a given radius around a center point 
+  function generatePointsWithinCircle(center, radiusInDegrees, density) {
+    let points = [];
+    const step = radiusInDegrees / density; // Adjust step based on density and radius in degrees
+    for (let lat = center.lat - radiusInDegrees; lat <= center.lat + radiusInDegrees; lat += step) {
+      // Calculate the maximum longitude difference at the current latitude
+      const maxLngDiff = radiusInDegrees / Math.cos(lat * Math.PI / 180);
+      for (let lng = center.lng - maxLngDiff; lng <= center.lng + maxLngDiff; lng += step) {
+        let point = L.latLng(lat, lng);
+        //L.circleMarker(point, { radius: 1, color: 'black' }).addTo(map.current); // Uncomment to visualize the grid
+        points.push(point);
+      }
+    }
+  
+    return points;
+  }
+
+  const findOptimalPosition = () => {
+    const center = L.latLng(44.4937544, 11.3409058);
+    const radius = 2863.6245952823815 / 111139; // Convert meters to degrees
+    let optimalPosition = null;
+    let highestSatisfaction = 0;
+    const density = 100; // Granularity of the search
+
+    const points = generatePointsWithinCircle(center, radius, density);
+
+    points.forEach(point => {
+      let satisfaction = calculateSatisfactionForPoint(point, neighborhood.current);
+      if (satisfaction > highestSatisfaction) {
+        console.log("New highest satisfaction:", satisfaction);
+        highestSatisfaction = satisfaction;
+        optimalPosition = point;
+      }
+      if (satisfaction === sum(formData)) {
+        console.log("Optimal position found:", optimalPosition);
+        return;
+      }
+    });
+
+    console.log("Optimal position:", optimalPosition);
+    // Add a marker to the optimal position
+    const color = setMarkerColor(optimalPosition, neighborhood.current);
+    const marker = L.circleMarker(optimalPosition, {
+      radius: 5,
+      fillColor: color,
+      color: color,
+      weight: 1,
+      opacity: 1,
+      fillOpacity: 0.8,
+      neighborhood: neighborhood.current
+    }).addTo(map.current);
+    setSelectedMarkers(prevMarkers => [...prevMarkers,  marker]);
+    return marker;
+  };
+
   const addMarker = (e) => {
     // Create a marker and add it to the map
     const color = setMarkerColor(e.latlng, neighborhood.current);
@@ -152,7 +214,8 @@ const Map = () => {
           color: color,
           weight: 1,
           opacity: 1,
-          fillOpacity: 0.8
+          fillOpacity: 0.8,
+          neighborhood: neighborhood.current
       }).addTo(map.current);  
 
     console.log("Marker:", marker);
@@ -178,6 +241,7 @@ const Map = () => {
       const radius = e.latlng.distanceTo(areaCenter.current); // calculate the radius of the area
       const color = setMarkerColor(areaCenter.current, radius); // choose color based on center and radius
       const newCircle = L.circle(areaCenter.current, { radius, color }).addTo(map.current); // create the circle with chosen color
+      console.log("Area:", newCircle);
       setAreas(prevAreas => [...prevAreas, newCircle]); // add the circle to the areas array
       drawing.current = false;
     }
@@ -203,9 +267,10 @@ const Map = () => {
     }, []);
 
     useEffect(() => {
-      if (poiData) {
+      if (poiData) {       
         map.current.on('click', onMapClick); // Add the click event listener to the map only after the PoI data has been loaded
       }
+    // eslint-disable-next-line
     }, [poiData]);
 
     const handleCheckboxChange = (e, data) => {
@@ -214,6 +279,20 @@ const Map = () => {
         else             
             map.current.removeLayer(data);
     };
+
+    const flushPoiData = () => {
+        if (poiData) {
+            Object.keys(poiData).forEach((type) => {
+              // Remove layer from the map
+              map.current.removeLayer(poiData[type].layer);
+              // Uncheck the corresponding checkbox
+              const checkbox = document.getElementById(`checkbox-${type}`);
+              if (checkbox) {
+                  checkbox.checked = false;
+              }
+            });
+        }
+    }
     
     const flushMarkers = () => {
         selectedMarkers.forEach(marker => {
@@ -238,9 +317,7 @@ const Map = () => {
         alert("Please insert a number");
         return;
       } else {
-        console.log("Value to use:", neighborhoodValue);
         neighborhood.current = neighborhoodValue;
-        console.log("Neighborhood set to:", neighborhood.current);
       }
     };
 
@@ -264,6 +341,30 @@ const Map = () => {
       );
     }
 
+    const handleTimeFilter = (marker, time, mezzo) => {
+      // Check if the inserted value is a number
+      if (isNaN(time)) {
+        alert("Please insert a number");
+        return;
+      } 
+      else {
+        if (poiData) {
+          Object.keys(poiData).forEach((type) => {
+            const checkbox = document.getElementById(`checkbox-${type}`);
+            if (checkbox.checked) {
+              // poiData[type] exists and is an array, now iterate over the points
+              poiData[type].points.forEach(point => {
+                
+              });
+            }
+          });
+        }
+        console.log("Time to use:", time);
+        console.log("Mezzo to use:", mezzo);
+        console.log("Marker to filter:", marker);
+      }
+    }
+
     return (
         <div>
             <div className="map-wrap">
@@ -275,17 +376,26 @@ const Map = () => {
                     {poiData && Object.keys(poiData).map((type, index) => (
                         <div key={index}>
                             <input type="checkbox" id={type} name={type} onChange={(e) => handleCheckboxChange(e, poiData[type].layer)} />
-                            <label htmlFor={type}>{type}</label>
+                            <label htmlFor={type}>
+                              <span style={{ height: '10px', width: '10px', backgroundColor: poiData[type].color, borderRadius: '50%', display: 'inline-block', marginRight: '5px' }}></span>
+                              {type}
+                            </label>
                         </div>
                     ))}
                 </div>
                 <div>
-                  <h4>Selection mode: {drawMode.current ? "Marker" : "Area"}</h4>
-                  <button onClick={() => drawMode.current = !drawMode.current}>Switch</button>
+                  <h2 htmlFor="selectionMode">Selection mode:</h2>
+                  <select
+                    id="selectionMode"
+                    value={drawMode.current ? "Marker" : "Area"}
+                    onChange={(e) => (drawMode.current = e.target.value === "Marker")}>
+                    <option value="Marker">Marker</option>
+                    <option value="Area">Area</option>
+                  </select>
                   <br/>
                 </div>
                 <div>
-                  <label htmlFor="neighborhood">Neighborhood: </label>
+                  <h2 htmlFor="neighborhood">Neighborhood: </h2>
                   <input type="text" id="neighborhood" name="neighborhood" placeholder={neighborhood.current}/>
                   <button onClick={handleNeighborhoodChange}>Set neighborhood</button>
                 </div>
@@ -293,6 +403,7 @@ const Map = () => {
                     <button onClick={flushMarkers}>Flush Markers</button>
                     <button onClick={flushAreas}>Flush Areas</button>
                 </div>
+                <button onClick={findOptimalPosition}>Find Optimal Position</button>
             </div>
             <div className='selected-list'>
                 <h2>Selected Markers</h2>
@@ -301,8 +412,25 @@ const Map = () => {
                     <React.Fragment key={index}>
                       <h4>Marker {index}</h4>
                       <li>{marker.getLatLng().toString()}</li>
-                      <li>Satisfaction:</li>
-                      <li style={{ color: marker.options.color.toString()}}> {marker.options.color.toString()}</li>
+                      <li>Neighborhood: {marker.options.neighborhood}</li>
+                      <li>Satisfaction: <span style={{ color: marker.options.color.toString() }}>{marker.options.color.toString()}</span></li>
+                      <div>
+                        <label htmlFor={`time-${index}`}>Tempo:</label>
+                        <input placeholder='min.' type="text" id={`time-${index}`} name="time" />
+                        <label htmlFor={`mezzo-${index}`}>Mezzo:</label>
+                        <select id={`mezzo-${index}`} name="mezzo">
+                          <option value="piedi">Piedi</option>
+                          <option value="bici">Bici</option>
+                          <option value="auto">Auto</option>
+                        </select>
+                        <button onClick={() => {
+                          const timeElement = document.getElementById(`time-${index}`);
+                          const mezzoElement = document.getElementById(`mezzo-${index}`);
+                          const time = timeElement.value;
+                          const mezzo = mezzoElement.value;
+                          handleTimeFilter(marker, time, mezzo);
+                        }}>Filter</button>
+                      </div>
                       <button onClick={() => removeMarker(marker)}>Remove</button>
                     </React.Fragment>    
                   ))}
@@ -313,8 +441,7 @@ const Map = () => {
                         <React.Fragment key={index}>
                           <h4>Area {index}</h4>
                           <li>{area.getLatLng().toString()} - {area.getRadius()}</li>
-                          <li>Satisfaction:</li>
-                          <li style={{ color: area.options.color.toString()}}> {area.options.color.toString()}</li>
+                          <li>Satisfaction: <span style={{ color: area.options.color.toString() }}>{area.options.color.toString()}</span></li>
                           <button onClick={() => removeArea(area)}>Remove</button>
                         </React.Fragment>
                     ))}
