@@ -1,70 +1,27 @@
-# Getting Started with Create React App
+### Home Zone Analyzer
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This is a software platform for the management and processing of spatial data, specifically designed to provide recommendations for purchasing real estate in the city of Bologna. The platform comprises a back-end responsible for data management and a front-end offering an interactive interface for end users. The primary objective of the system is to analyze user preferences regarding the proximity and density of various Points of Interest (PoIs) and to provide targeted recommendations on areas and properties that best meet their needs.
 
-## Available Scripts
+The platform is structured around the following key modules:
 
-In the project directory, you can run:
+1. **User Questionnaire**: A data collection module that identifies user preferences through a questionnaire. The questions pertain to the importance of the presence and density of various PoIs in the vicinity, with a rating system from 0 to 5. The questions cover at 20 types of PoIs, such as green areas, parking lots, and bus stops.
 
-### `npm start`
+2. **Map Visualization**: The platform allows users to add markers for properties of interest and draw geofences to delineate candidate areas. These elements can be managed interactively via a map interface.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+3. **PoI Filtering and Visualization**: Users can view and filter PoIs on the map based on their type, facilitating the analysis of the proximity of desired services.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+4. **Property and Area Ranking**: Using a ranking function based on the preferences expressed in the questionnaire and the presence of PoIs, the system assigns a score to each property and candidate area, displaying them with colored markers on the map.
 
-### `npm test`
+5. **Configurable Neighborhood Parameters**: The system allows for modifying the parameters that define the concept of a neighborhood, so the radius of a circular area, having a property as its center, directly from the dashboard.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+6. **Moran's I Index Calculation**: The platform calculates the Moran's I index between the average price of properties and other spatial data series related to PoIs, providing an analysis of the spatial distribution of prices.
 
-### `npm run build`
+7. **Location Suggestions**: Based on user preferences and the presence of PoIs, the platform suggests optimal locations for purchasing a property.
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+8. **Spatial Data Management**: All spatial data is saved and archived using a POSTGRES/POSTGIS database. All the data relative to PoI were imported from the OpenData portal of the City of Bologna.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+9. **Proximity Based on Travel Time**: In addition to linear distance, the system includes a mechanism to calculate the proximity of PoIs based on travel time using various modes of transportation, allowing users to filter PoIs reachable within predefined time intervals.
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+The technologies used for the development of the platform include POSTGRES/POSTGIS for spatial data management in the back-end, developed with Express.js, and Leaflet for the web interface development in the front-end, implemented with React.js. The various components of the system are developed within Docker containers and orchestrated using the Kubernetes framework.
 
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+This platform aims not only to facilitate the decision-making process for users seeking a property but also represents a powerful tool for spatial analysis, integrating advanced techniques for managing and visualizing geographic data.
