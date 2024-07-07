@@ -36,6 +36,16 @@ const Menu = () => {
         }
         // Do something with the JSON data
         console.log(jsonData);
+
+        // Send the JSON data to the backend
+        fetch('http://localhost:9000/data/api/survey', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(jsonData),
+        })
+
         navigate('/map', { state: jsonData });
         // Reset the form
         form.reset();

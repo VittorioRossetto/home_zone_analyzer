@@ -365,6 +365,31 @@ const Map = () => {
       }
     }
 
+    const storeMarker = (marker) => {
+      // Assuming marker has properties like latitude and longitude
+      // Adjust these property names based on your marker object's structure
+      const latlng = marker.getLatLng();
+      console.log("Storing marker:", marker);
+      const markerData = {
+        latitude: latlng.lat,
+        longitude: latlng.lng,
+        neighborhood: marker.options.neighborhood,
+      };
+    
+      fetch('http://localhost:9000/data/api/lista_immobili', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(markerData),
+      })
+      .then(response => response.json())
+      .then(data => console.log('Success:', data))
+      .catch((error) => {
+        console.error('Error:', error);
+      });
+    }
+
     return (
         <div>
             <div className="map-wrap">
@@ -432,6 +457,7 @@ const Map = () => {
                         }}>Filter</button>
                       </div>
                       <button onClick={() => removeMarker(marker)}>Remove</button>
+                      <button onClick={() => storeMarker(marker)}>Store</button>
                     </React.Fragment>    
                   ))}
                 </ul>
