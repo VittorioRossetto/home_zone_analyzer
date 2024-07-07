@@ -11,6 +11,7 @@ app.use(cors());
 app.use("/data", require("./routes/hello"));
 app.use("/data", require("./routes/survey"));
 app.use("/data", require("./routes/lista_immobili"));
+app.use("/data", require("./routes/lista_aree"));
 
 
 app.listen(9000, () => 

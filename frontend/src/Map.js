@@ -390,6 +390,74 @@ const Map = () => {
       });
     }
 
+    const storeArea = (area) => {
+      // Assuming area has properties like latitude and longitude
+      // Adjust these property names based on your area object's structure
+      const latlng = area.getLatLng();
+      const radius = area.getRadius();
+      console.log("Storing area:", area);
+      const areaData = {
+        latitude: latlng.lat,
+        longitude: latlng.lng,
+        radius: radius,
+      };
+    
+      fetch('http://localhost:9000/data/api/lista_aree', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(areaData),
+      })
+      .then(response => response.json())
+      .then(data => console.log('Success:', data))
+      .catch((error) => {
+        console.error('Error:', error);
+      });
+    }
+
+    const retrieveMarkers = () => {
+      fetch('http://localhost:9000/data/api/lista_immobili')
+      .then(response => response.json())
+      .then(data => 
+        data.forEach(marker => {
+          const latlng = L.latLng(marker.latitude, marker.longitude);
+          const color = setMarkerColor(latlng, neighborhood.current);
+          const newMarker = L.circleMarker(latlng, {
+            radius: 5,
+            fillColor: color,
+            color: color,
+            weight: 1,
+            opacity: 1,
+            fillOpacity: 0.8,
+            neighborhood: marker.neighborhood
+          }).addTo(map.current);
+          setSelectedMarkers(prevMarkers => [...prevMarkers,  newMarker]);
+        }
+      ))
+      .catch((error) => {
+        console.error('Error:', error);
+      });
+    }
+
+    const retrieveAreas = () => {
+      fetch('http://localhost:9000/data/api/lista_aree')
+      .then(response => response.json())
+      .then(data => 
+        data.forEach(area => {
+          const latlng = L.latLng(area.latitude, area.longitude);
+          const color = setMarkerColor(latlng, area.radius);
+          const newArea = L.circle(latlng, { radius: area.radius, color: color }).addTo(map.current);
+          setAreas(prevAreas => [...prevAreas, newArea]);
+        }
+      ))
+      .catch((error) => {
+        console.error('Error:', error);
+      });
+    }
+
+
+
     return (
         <div>
             <div className="map-wrap">
@@ -429,6 +497,8 @@ const Map = () => {
                     <button onClick={flushAreas}>Flush Areas</button>
                 </div>
                 <button onClick={findOptimalPosition}>Find Optimal Position</button>
+                <button onClick={retrieveMarkers}>Retrieve Markers</button>
+                <button onClick={retrieveAreas}>Retrieve Areas</button>
             </div>
             <div className='selected-list'>
                 <h2>Selected Markers</h2>
@@ -469,6 +539,7 @@ const Map = () => {
                           <li>{area.getLatLng().toString()} - {area.getRadius()}</li>
                           <li>Satisfaction: <span style={{ color: area.options.color.toString() }}>{area.options.color.toString()}</span></li>
                           <button onClick={() => removeArea(area)}>Remove</button>
+                          <button onClick={() => storeArea(area)}>Store</button>
                         </React.Fragment>
                     ))}
                 </ul>
