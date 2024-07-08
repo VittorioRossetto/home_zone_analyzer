@@ -215,7 +215,8 @@ const Map = () => {
           weight: 1,
           opacity: 1,
           fillOpacity: 0.8,
-          neighborhood: neighborhood.current
+          neighborhood: neighborhood.current,
+          filteredPoints: []
       }).addTo(map.current);  
 
     console.log("Marker:", marker);
@@ -461,6 +462,10 @@ const Map = () => {
 
     // Adjusted handleTimeFilter to be async and await the result of getTravelTime
     const handleTimeFilter = async (marker, time, mezzo) => {
+      // Clear any previously filtered points
+      removeFilteredPoints(marker);
+      marker.options.filteredPoints = [];     
+      
       if (isNaN(time)) {
         alert("Please insert a number");
         return;
@@ -486,14 +491,23 @@ const Map = () => {
                   }).addTo(map.current);
                   // Add a popup with the name of the point and the travel time
                   newMarker.bindPopup(`<b>${point.name}</b><br>${point.type}<br>${point.area}<br>${travelTime.toFixed(2)} min.`);
-                  // Display the popup
-                  newMarker.openPopup();
+                  // Add the marker to the filteredPoints array of the original marker using setSelectedMarkers to trigger a re-render
+                  marker.options.filteredPoints.push(newMarker);
+                  setSelectedMarkers(prevMarkers => [...prevMarkers]);
                 }
               }
             }
           }
         }
       }
+    };
+
+    const removeFilteredPoints = (marker) => {
+      marker.options.filteredPoints.forEach(filteredPoint => {
+        map.current.removeLayer(filteredPoint);
+      });
+      marker.options.filteredPoints = [];
+      setSelectedMarkers(prevMarkers => [...prevMarkers]);
     };
 
     return (
@@ -562,7 +576,10 @@ const Map = () => {
                           const time = timeElement.value;
                           const mezzo = mezzoElement.value;
                           handleTimeFilter(marker, time, mezzo);
-                        }}>Filter</button>
+                        }}>Filter</button><br />
+                        {marker.options.filteredPoints && marker.options.filteredPoints.length > 0 && (
+                          <button onClick={() => removeFilteredPoints(marker)}>Remove Filtered</button>
+                        )}
                       </div>
                       <button onClick={() => removeMarker(marker)}>Remove</button>
                       <button onClick={() => storeMarker(marker)}>Store</button>
