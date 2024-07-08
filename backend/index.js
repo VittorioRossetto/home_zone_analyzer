@@ -8,10 +8,10 @@ app.use(express.json());
 app.use(cors());
 
 //ROUTES
-app.use("/data", require("./routes/hello"));
 app.use("/data", require("./routes/survey"));
 app.use("/data", require("./routes/lista_immobili"));
 app.use("/data", require("./routes/lista_aree"));
+app.use("/data", require("./routes/poi_data"));
 
 
 app.listen(9000, () => 

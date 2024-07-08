@@ -43,8 +43,15 @@ const Map = () => {
   async function fetchPoIData(path) {
     try {
       const response = await fetch(path);
-      const data = await response.json();
-      const poiData = {}; // Object to hold layers and points arrays for each PoI type
+    const data = await response.json();
+
+    // Check if data.features exists and is an array
+    if (!data.features || !Array.isArray(data.features)) {
+      console.error('data.features is undefined or not an array');
+      return {}; // Return an empty object or handle the error as appropriate
+    }
+
+    const poiData = {}; // Object to hold layers and points arrays for each PoI type
   
       // Function to determine the color based on the PoI type
       const getColor = (type) => {
@@ -264,7 +271,7 @@ const Map = () => {
   }, [mapOptions]);
 
     useEffect(() => {
-        fetchPoIData('/geojson/PoI_complete.geojson').then(data => setPoiData(data));
+        fetchPoIData('http://localhost:9000/data/api/poi_data').then(data => setPoiData(data));
     }, []);
 
     useEffect(() => {
