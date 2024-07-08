@@ -4,7 +4,6 @@ import { useLocation } from 'react-router-dom';
 import L from "leaflet";
 import './css/map.css';
 
-
 const Map = () => {
   const location = useLocation();
   const formData = location.state;
@@ -93,6 +92,7 @@ const Map = () => {
           opacity: 1,
           fillOpacity: 0.8
         });
+        marker.bindPopup(`<b>${feature.properties.nome_punto_di_interesse}</b><br>${feature.properties.tipologia_punto_di_interesse}<br>${feature.properties.nome_area}`);
   
         // Add the marker to the layer for this type
         poiData[type].layer.addLayer(marker);
@@ -341,30 +341,6 @@ const Map = () => {
       );
     }
 
-    const handleTimeFilter = (marker, time, mezzo) => {
-      // Check if the inserted value is a number
-      if (isNaN(time)) {
-        alert("Please insert a number");
-        return;
-      } 
-      else {
-        if (poiData) {
-          Object.keys(poiData).forEach((type) => {
-            const checkbox = document.getElementById(`checkbox-${type}`);
-            if (checkbox.checked) {
-              // poiData[type] exists and is an array, now iterate over the points
-              poiData[type].points.forEach(point => {
-                
-              });
-            }
-          });
-        }
-        console.log("Time to use:", time);
-        console.log("Mezzo to use:", mezzo);
-        console.log("Marker to filter:", marker);
-      }
-    }
-
     const storeMarker = (marker) => {
       // Assuming marker has properties like latitude and longitude
       // Adjust these property names based on your marker object's structure
@@ -456,7 +432,69 @@ const Map = () => {
       });
     }
 
+    // Adjusted getTravelTime to ensure it returns a promise that resolves with the duration
+    const getTravelTime = (startPoint, endPoint, mode) => {
+      return new Promise((resolve, reject) => {
+        const mapboxAccessToken = 'pk.eyJ1Ijoidml0dG9yaW8tcm9zc2V0dG8iLCJhIjoiY2x5Y3lrc25yMDBtZTJrczRhd2Rod3U5NyJ9.zgQtB-yBNlT-D00aQ4Agng';
+        const startLatLng = startPoint.getLatLng();
+        const url = `https://api.mapbox.com/directions/v5/mapbox/${mode}/${startLatLng.lng},${startLatLng.lat};${endPoint.coordinates[1]},${endPoint.coordinates[0]}?geometries=geojson&access_token=${mapboxAccessToken}`;
 
+        fetch(url)
+          .then(response => response.json())
+          .then(data => {
+            if (data.routes && data.routes.length > 0) {
+              const durationInSeconds = data.routes[0].duration;
+              const durationInMinutes = durationInSeconds / 60;
+              console.log(`Travel time: ${durationInMinutes.toFixed(2)} minutes`);
+              resolve(durationInMinutes);
+            } else {
+              console.log('No routes found.');
+              resolve(null); // Resolve with null if no routes found
+            }
+          })
+          .catch(error => {
+            console.error('Error:', error);
+            reject(error);
+          });
+      });
+    };
+
+    // Adjusted handleTimeFilter to be async and await the result of getTravelTime
+    const handleTimeFilter = async (marker, time, mezzo) => {
+      if (isNaN(time)) {
+        alert("Please insert a number");
+        return;
+      } else {
+        console.log("poiData:", poiData);
+        console.log("formData:", formData);
+        if (poiData && formData) {
+          console.log("Filtering markers based on time and mezzo...");
+          for (const key of Object.keys(poiData)) {
+            if (poiData[key] && Array.isArray(poiData[key].points) && formData[key] && formData[key] > 0) {
+              for (const point of poiData[key].points) {
+                const travelTime = await getTravelTime(marker, point, mezzo);
+                if (travelTime !== null && travelTime <= time) {
+                  // Add the point to map
+                  const color = poiData[key].color;
+                  const newMarker = L.circleMarker(point.coordinates, {
+                    radius: 5,
+                    fillColor: color,
+                    color: "#000",
+                    weight: 1,
+                    opacity: 1,
+                    fillOpacity: 0.8
+                  }).addTo(map.current);
+                  // Add a popup with the name of the point and the travel time
+                  newMarker.bindPopup(`<b>${point.name}</b><br>${point.type}<br>${point.area}<br>${travelTime.toFixed(2)} min.`);
+                  // Display the popup
+                  newMarker.openPopup();
+                }
+              }
+            }
+          }
+        }
+      }
+    };
 
     return (
         <div>
@@ -514,9 +552,9 @@ const Map = () => {
                         <input placeholder='min.' type="text" id={`time-${index}`} name="time" />
                         <label htmlFor={`mezzo-${index}`}>Mezzo:</label>
                         <select id={`mezzo-${index}`} name="mezzo">
-                          <option value="piedi">Piedi</option>
-                          <option value="bici">Bici</option>
-                          <option value="auto">Auto</option>
+                          <option value="walking">Piedi</option>
+                          <option value="driving">Auto</option>
+                          <option value="cycling">Bici</option>
                         </select>
                         <button onClick={() => {
                           const timeElement = document.getElementById(`time-${index}`);
