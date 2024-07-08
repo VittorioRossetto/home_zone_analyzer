@@ -5,6 +5,7 @@ import './css/survey.css';
 const Menu = () => {
     const navigate = useNavigate(); 
 
+    // Function to handle the slider change event
     const handleSliderChange = (event) => {
         const sliderId = event.target.id;
         const sliderValue = event.target.value;
@@ -12,12 +13,15 @@ const Menu = () => {
         valueElement.textContent = sliderValue;
     }
 
+    // Add event listeners to the sliders when the component mounts
     useEffect(() => {
+        // Get all the sliders
         const sliders = document.querySelectorAll('input[type="range"]');
         sliders.forEach(slider => {
             slider.addEventListener('input', handleSliderChange);
         });
         return () => {
+            // Remove event listeners when the component unmounts
             sliders.forEach(slider => {
                 slider.removeEventListener('input', handleSliderChange);
             });
@@ -31,6 +35,7 @@ const Menu = () => {
         const formData = new FormData(form);
         // Convert form data to JSON
         const jsonData = {};
+        // Iterate over the form data and add it to the JSON object
         for (let [key, value] of formData.entries()) {
             jsonData[key] = value;
         }
