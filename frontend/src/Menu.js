@@ -13,6 +13,17 @@ const Menu = () => {
         valueElement.textContent = sliderValue;
     }
 
+    // Fetch the POI data when the component mounts
+    useEffect(() => {
+        fetch('http://localhost:9000/data/api/poi_data', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({}),
+        })
+    }, []);
+
     // Add event listeners to the sliders when the component mounts
     useEffect(() => {
         // Get all the sliders

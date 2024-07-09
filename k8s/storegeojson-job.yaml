@@ -1,0 +1,23 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: storegeojson
+spec:
+  template:
+    spec:
+      containers:
+      - name: storegeojson
+        image: your-docker-username/backend:latest
+        command: ["python3", "/app/util/storeGeoJson.py"]
+        env:
+        - name: DB_NAME
+          value: home_zone_analyzer
+        - name: DB_USER
+          value: postgres
+        - name: DB_PASSWORD
+          value: V!ttori0123
+        - name: DB_HOST
+          value: db
+        - name: DB_PORT
+          value: "5432"
+      restartPolicy: OnFailure

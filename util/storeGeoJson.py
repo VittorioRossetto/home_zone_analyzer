@@ -1,5 +1,6 @@
 import json
 import os
+from time import sleep
 from dotenv import load_dotenv
 import psycopg2
 
@@ -17,14 +18,27 @@ password = os.getenv('DB_PASSWORD')
 host = os.getenv('DB_HOST')
 port = os.getenv('DB_PORT')
 
-# Establish a connection to the database
-conn = psycopg2.connect(
-    dbname=dbname,
-    user=user,
-    password=password,
-    host=host,
-    port=port
-)
+max_retries = 10
+retries = 0
+
+while retries < max_retries:
+    try:
+        conn = psycopg2.connect(
+            dbname=dbname,
+            user=user,
+            password=password,
+            host=host,
+            port=port
+        )
+        print("Connected to the database")
+        break
+    except psycopg2.OperationalError as e:
+        retries += 1
+        print(f"Failed to connect to database. Retrying in 5 seconds... ({retries}/{max_retries})")
+        sleep(5)
+else:
+    print("Max retries reached. Could not connect to the database.")
+    exit(1)
 cur = conn.cursor()
 
 # Create a table (if not exists)

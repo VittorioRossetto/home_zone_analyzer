@@ -13,15 +13,8 @@ RUN npm install
 # Copy the rest of the application code
 COPY . .
 
-# Build the React application
-RUN npm run build
-
-# Use a separate image to serve the built application
-FROM nginx:alpine
-COPY --from=0 /app/build /usr/share/nginx/html
-
 # Expose the port the app runs on
-EXPOSE 3000
+EXPOSE 9000
 
-# Start Nginx server
-CMD ["nginx", "-g", "daemon off;"]
+# Start the backend application
+CMD ["nodemon", "index.js"]
