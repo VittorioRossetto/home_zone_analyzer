@@ -28,6 +28,51 @@ const Menu = () => {
         };
     }, []);
 
+    // Function to get the count for a key
+    const getCountForKey = (key) => {
+        switch (key) {
+            case "Biblioteca":
+                return 1;
+            case "Eventi e spettacoli":
+                return 1;
+            case "Scuola":
+                return 1;
+            case "Struttura sanitaria":
+                return 2;
+            case "Area verde":
+                return 1;
+            case "Casa di quartiere":
+                return 1;
+            case "Area Ortiva":
+                return 1;
+            case "Pista Ciclopedonale":
+                return 1;
+            case "Rastrelliera bici":
+                return 3;
+            case "Servizio extrascolastico":
+                return 1;
+            case "Zona pedonale":
+                return 1;
+            case "Aree di parcheggio":
+                return 4;
+            case "Parcheggi dotati di colonnine elettriche":
+                return 1;
+            case "Sport e fitness":
+                return 1;
+            case "Risorse sociali":
+                return 1;
+            case "Fermate Tper":
+                return 2;
+            case "Area Wi-Fi":
+                return 1;
+            case "Stazione ferroviaria":
+                return 1;
+            default:
+                return 0;
+        }
+    }
+
+    // Function to handle the form submission
     const handleSubmit = (event) => {
         event.preventDefault();
         // Get the form data
@@ -37,10 +82,9 @@ const Menu = () => {
         const jsonData = {};
         // Iterate over the form data and add it to the JSON object
         for (let [key, value] of formData.entries()) {
-            jsonData[key] = value;
+            jsonData[key] = { value: parseInt(value, 10), count: getCountForKey(key) };
         }
-        // Do something with the JSON data
-        console.log(jsonData);
+        //console.log(jsonData); // Uncomment to see the JSON data
 
         // Send the JSON data to the backend
         fetch('http://localhost:9000/data/api/survey', {
@@ -74,7 +118,7 @@ const Menu = () => {
                 <input type="range" id="slider-Scuola" name="Scuola" min="0" max="5" defaultValue="0" />
                 <span id="slider-Scuola-value">0</span>
 
-                <label htmlFor="slider-StrutturaSanitaria">Quanto è importante la presenza di una struttura sanitaria nel vicinato:</label>
+                <label htmlFor="slider-StrutturaSanitaria">Quanto è importante la presenza di almeno due strutture sanitarie nel vicinato:</label>
                 <input type="range" id="slider-StrutturaSanitaria" name="Struttura sanitaria" min="0" max="5" defaultValue="0" />
                 <span id="slider-StrutturaSanitaria-value">0</span>
 
@@ -94,7 +138,7 @@ const Menu = () => {
                 <input type="range" id="slider-PistaCiclopedonale" name="Pista Ciclopedonale" min="0" max="5" defaultValue="0" />
                 <span id="slider-PistaCiclopedonale-value">0</span>
 
-                <label htmlFor="slider-RastrellieraBici">Quanto è importante la presenza di rastrelliere per bici nel vicinato:</label>
+                <label htmlFor="slider-RastrellieraBici">Quanto è importante la presenza di almeno tre rastrelliere per bici nel vicinato:</label>
                 <input type="range" id="slider-RastrellieraBici" name="Rastrelliera bici" min="0" max="5" defaultValue="0" />
                 <span id="slider-RastrellieraBici-value">0</span>
 
@@ -106,7 +150,7 @@ const Menu = () => {
                 <input type="range" id="slider-ZonaPedonale" name="Zona pedonale" min="0" max="5" defaultValue="0" />
                 <span id="slider-ZonaPedonale-value">0</span>
 
-                <label htmlFor="slider-AreeDiParcheggio">Quanto è importante la presenza di aree di parcheggio nel vicinato:</label>
+                <label htmlFor="slider-AreeDiParcheggio">Quanto è importante la presenza di almeno quattro aree di parcheggio nel vicinato:</label>
                 <input type="range" id="slider-AreeDiParcheggio" name="Aree di parcheggio" min="0" max="5" defaultValue="0" />
                 <span id="slider-AreeDiParcheggio-value">0</span>
 
@@ -122,11 +166,11 @@ const Menu = () => {
                 <input type="range" id="slider-RisorseSociali" name="Risorse sociali" min="0" max="5" defaultValue="0" />
                 <span id="slider-RisorseSociali-value">0</span>
 
-                <label htmlFor="slider-FermateTper">Quanto è importante la presenza di fermate del trasporto pubblico (Tper) nel vicinato:</label>
+                <label htmlFor="slider-FermateTper">Quanto è importante la presenza di almeno due fermate del trasporto pubblico (Tper) nel vicinato:</label>
                 <input type="range" id="slider-FermateTper" name="Fermate Tper" min="0" max="5" defaultValue="0" />
                 <span id="slider-FermateTper-value">0</span>
 
-                <label htmlFor="slider-AreaWiFi">Quanto è importante la presenza di aree Wi-Fi nel vicinato:</label>
+                <label htmlFor="slider-AreaWiFi">Quanto è importante la presenza di due aree Wi-Fi nel vicinato:</label>
                 <input type="range" id="slider-AreaWiFi" name="Area Wi-Fi" min="0" max="5" defaultValue="0" />
                 <span id="slider-AreaWiFi-value">0</span>
 

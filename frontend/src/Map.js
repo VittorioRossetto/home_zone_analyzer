@@ -26,21 +26,22 @@ const Map = () => {
   const [poiData, setPoiData] = useState(null);
   const neighborhood = useRef(200);
 
-  function sum( obj ) {
-    // Function to sum all the values of an object
-    var sum = 0;
-    for( var el in obj ) {
-      if( obj.hasOwnProperty( el ) ) {
-        sum += parseFloat( obj[el] );
+  const [moransI, setMoransI] = useState(null);
+
+  // Function to calculate the sum of the values in the form data
+  function sum(formData) {
+    return Object.values(formData).reduce((acc, current) => {
+      if (typeof current.value === 'number') {
+        return acc + current.value;
       }
-    }
-    return sum;
+      return acc;
+    }, 0);
   }
 
   // useEffect to log the form data on mount
   useEffect(() => {
     if (!formData) return;
-    console.log('Form data received:', formData);
+    //console.log('Form data received:', formData); // Uncomment to log the form data
   }, [formData]);
 
 
@@ -130,34 +131,48 @@ const Map = () => {
   // Function to calculate the satisfaction for a given point
   const calculateSatisfactionForPoint = (center, radius) => {
     let satisfaction = 0;
-
+    let typesWithinRadius = new Set(); // Track PoI types within the radius
+  
     Object.keys(formData).forEach(key => {
-      if (poiData[key] && Array.isArray(poiData[key].points) && formData[key] > 0) {
-        // poiData[key] exists and is an array, now iterate over the points
+      if (poiData[key] && Array.isArray(poiData[key].points) && formData[key].value > 0) {
+        let count = 0; // Initialize the count for the PoI type
         poiData[key].points.forEach(point => {
+          //console.log("Point:", point); // Uncomment to log the point
           if (center.distanceTo(point.coordinates) <= radius) {
-            // If the point is within the radius, add the corresponding value from the form data
-            satisfaction += formData[key];
-            // console.log("Satisfaction:", formData[key]); // Uncomment to log the satisfaction
-            return;
+            // If the point is within the radius, increment the count
+            //console.log("Point within radius:", point); // Uncomment to log the point within the radius
+            count += 1; // Increment the count for the PoI type
+            if (count >= formData[key].count) {
+              typesWithinRadius.add(key); // Add the PoI type to the set if the count is reached
+            }
           }
         });
       }
     });
+  
+    // Add the formData value only once for each PoI type found within the radius
+    typesWithinRadius.forEach(key => {
+      satisfaction += formData[key].value;
+      //console.log("Satisfaction:", satisfaction);
+    });
+  
     return satisfaction;
-  }
+  };
 
   // Function to set the color of a marker based on the satisfaction
   const setMarkerColor = (center, radius) => {
     if (poiData && poiData["Biblioteca"]) {
-      if(sum(formData) === 0) return 'gray' // If no data is provided, return gray as default color if no preference is set
+      if(sum(formData) === 0) return {satisfaction: null, color: 'gray'} // If no data is provided, return gray as default color if no preference is set
       let satisfaction = calculateSatisfactionForPoint(center, radius);
       // Set the color based on the satisfaction percentage
       const satisfactionPercentage = satisfaction / sum(formData) * 100;
-      if (satisfactionPercentage >= 75) return 'green';
-      else if (satisfactionPercentage >= 50) return 'yellow';
-      else if (satisfactionPercentage >= 25) return 'orange';
-      else return 'red';
+      let Markercolor
+      if (satisfactionPercentage >= 75)  Markercolor = 'green';
+      else if (satisfactionPercentage >= 50) Markercolor = 'yellow';
+      else if (satisfactionPercentage >= 25) Markercolor = 'orange';
+      else Markercolor = 'red'
+
+      return {satisfaction: satisfactionPercentage, color: Markercolor}
 
     } else {
       console.error("No PoI data available");
@@ -203,17 +218,18 @@ const Map = () => {
       }
     });
 
-    //console.log("Optimal position:", optimalPosition); // Uncomment to log the optimal position
     // Add a marker to the optimal position
-    const color = setMarkerColor(optimalPosition, neighborhood.current);
+    const sat = setMarkerColor(optimalPosition, neighborhood.current);
     const marker = L.circleMarker(optimalPosition, {
       radius: 5,
-      fillColor: color,
-      color: color,
+      fillColor: sat.color,
+      color: sat.color,
       weight: 1,
       opacity: 1,
       fillOpacity: 0.8,
-      neighborhood: neighborhood.current
+      neighborhood: neighborhood.current,
+      satisfaction: sat.satisfaction,
+      price: null
     }).addTo(map.current); // Add the marker to the map
     setSelectedMarkers(prevMarkers => [...prevMarkers,  marker]); // Add the marker to the selectedMarkers array
     return marker; // Return the marker
@@ -222,19 +238,22 @@ const Map = () => {
   // Function to create a new marker on click and add it to the map
   const addMarker = (e) => {
     // Create a marker and add it to the map
-    const color = setMarkerColor(e.latlng, neighborhood.current); // Choose color based on satisfaction given the neighborhood
+    const sat = setMarkerColor(e.latlng, neighborhood.current); // Choose color based on satisfaction given the neighborhood
+    //console.log("Sat: ",sat) // Uncomment to log the satisfaction object
+
     const marker = L.circleMarker(e.latlng, {
           radius: 5,
-          fillColor: color,
-          color: color,
+          fillColor: sat.color,
+          color: sat.color,
           weight: 1,
           opacity: 1,
           fillOpacity: 0.8,
           neighborhood: neighborhood.current,
-          filteredPoints: []
+          filteredPoints: [],
+          satisfaction: sat.satisfaction,
+          price: null,
       }).addTo(map.current);  
 
-    //console.log("Marker:", marker); // Uncomment to log the marker
     // Add the marker to the selectedMarkers array  
     setSelectedMarkers(prevMarkers => [...prevMarkers,  marker]);
     
@@ -256,9 +275,9 @@ const Map = () => {
     // if drawing, end drawing
     else{
       const radius = e.latlng.distanceTo(areaCenter.current); // calculate the radius of the area
-      const color = setMarkerColor(areaCenter.current, radius); // choose color based on center and radius
-      const newCircle = L.circle(areaCenter.current, { radius, color }).addTo(map.current); // create the circle with chosen color
-      console.log("Area:", newCircle);
+      const sat = setMarkerColor(areaCenter.current, radius); // choose color based on center and radius
+      const newCircle = L.circle(areaCenter.current, { radius: radius, color: sat.color, satisfaction: sat.satisfaction }).addTo(map.current); // create the circle with chosen color
+      //console.log("Area:", newCircle); // Uncomment to log the area
       setAreas(prevAreas => [...prevAreas, newCircle]); // add the circle to the areas array
       drawing.current = false;
     }
@@ -391,7 +410,8 @@ const Map = () => {
       body: JSON.stringify(markerData),
     })
     .then(response => response.json())
-    .then(data => console.log('Success:', data))
+    .then(data =>
+      console.log('Success:', data))
     .catch((error) => {
       console.error('Error:', error);
     });
@@ -432,15 +452,18 @@ const Map = () => {
     .then(data => 
       data.forEach(marker => {
         const latlng = L.latLng(marker.latitude, marker.longitude); 
-        const color = setMarkerColor(latlng, marker.neighborhood); // Choose color based on satisfaction given the neighborhood
+        const sat = setMarkerColor(latlng, marker.neighborhood); // Choose color based on satisfaction given the neighborhood
         const newMarker = L.circleMarker(latlng, {
           radius: 5,
-          fillColor: color,
-          color: color,
+          fillColor: sat.color,
+          color: sat.color,
           weight: 1,
           opacity: 1,
           fillOpacity: 0.8,
-          neighborhood: marker.neighborhood
+          neighborhood: marker.neighborhood,
+          filteredPoints: [],
+          price: null,
+          satisfaction: sat.satisfaction
         }).addTo(map.current);
         setSelectedMarkers(prevMarkers => [...prevMarkers,  newMarker]); // Add the marker to the selectedMarkers array
       }
@@ -457,8 +480,8 @@ const Map = () => {
     .then(data => 
       data.forEach(area => {
         const latlng = L.latLng(area.latitude, area.longitude);
-        const color = setMarkerColor(latlng, area.radius);
-        const newArea = L.circle(latlng, { radius: area.radius, color: color }).addTo(map.current);
+        const sat = setMarkerColor(latlng, area.radius);
+        const newArea = L.circle(latlng, { radius: area.radius, color: sat.color, satisfaction: sat.satisfaction }).addTo(map.current);
         setAreas(prevAreas => [...prevAreas, newArea]);
       }
     ))
@@ -482,10 +505,10 @@ const Map = () => {
           if (data.routes && data.routes.length > 0) {
             const durationInSeconds = data.routes[0].duration;
             const durationInMinutes = durationInSeconds / 60;
-            console.log(`Travel time: ${durationInMinutes.toFixed(2)} minutes`);
+            //console.log(`Travel time: ${durationInMinutes.toFixed(2)} minutes`); // Uncomment to log the travel time in minutes
             resolve(durationInMinutes);
           } else {
-            console.log('No routes found.');
+            console.error('No routes found.');
             resolve(null); // Resolve with null if no routes found
           }
         })
@@ -506,14 +529,11 @@ const Map = () => {
       alert("Please insert a number"); // Show an alert if the value is not a number
       return;
     } else {
-      //console.log("poiData:", poiData);
-      //console.log("formData:", formData);
       if (poiData && formData) {
-        //console.log("Filtering markers based on time and mezzo...");
         // Iterate over each PoI type and its points
         for (const key of Object.keys(poiData)) {
           // Check if the PoI type exists in the formData and the relative value is greater than 0
-          if (poiData[key] && Array.isArray(poiData[key].points) && formData[key] && formData[key] > 0) {
+          if (poiData[key] && Array.isArray(poiData[key].points) && formData[key].value && formData[key].value > 0) {
             // Iterate over each point
             for (const point of poiData[key].points) {
               // Get the travel time from the marker to the point
@@ -550,6 +570,71 @@ const Map = () => {
       map.current.removeLayer(filteredPoint);
     });
     marker.options.filteredPoints = [];
+    setSelectedMarkers(prevMarkers => [...prevMarkers]);
+  };
+
+
+  // Function to calculate the Moran's I index
+  const calculateMoransI = (e) => {
+    e.preventDefault();
+    const prices = []
+    const proximities = []
+
+    for (const marker of selectedMarkers) {
+      if (marker.options.price !== null) {
+        prices.push(marker.options.price);
+        proximities.push(marker.options.satisfaction);
+      }
+    }
+
+    const N = prices.length;
+  
+    // Calculate the mean of the prices
+    const meanPrice = prices.reduce((a, b) => a + b, 0) / N;
+  
+    // Calculate deviations from the mean
+    const deviations = prices.map(price => price - meanPrice);
+  
+    // Create the weight matrix based on proximity values
+    const weightMatrix = Array.from({ length: N }, () => Array(N).fill(0));
+    for (let i = 0; i < N; i++) {
+      for (let j = 0; j < N; j++) {
+        if (i !== j) {
+          // Weight as the product of normalized proximities
+          weightMatrix[i][j] = (proximities[i] / 100) * (proximities[j] / 100);
+        }
+      }
+    }
+  
+    // Calculate the numerator
+    let numerator = 0;
+    for (let i = 0; i < N; i++) {
+      for (let j = 0; j < N; j++) {
+        numerator += weightMatrix[i][j] * deviations[i] * deviations[j];
+      }
+    }
+  
+    // Calculate the denominator
+    const denominator = deviations.reduce((a, b) => a + b ** 2, 0);
+  
+    // Calculate S0 (sum of all weights)
+    const S0 = weightMatrix.flat().reduce((a, b) => a + b, 0);
+  
+    // Calculate Moran's I index
+    const res = (N / S0) * (numerator / denominator);
+    //console.log("Moran's I index:", res); // Uncomment to log the Moran's I index
+    setMoransI(res);
+  }
+
+  // Function to set price and trigger UI update
+  const setPrice = (marker, price) => {
+    if (isNaN(price)) {
+      alert("Please insert a number"); // Show an alert if the value is not a number
+      return;
+    }
+    marker.options.price = price;
+    //console.log("Price set to:", price); // Uncomment to log the price
+    // Update the selectedMarkers state to trigger a re-render
     setSelectedMarkers(prevMarkers => [...prevMarkers]);
   };
 
@@ -594,6 +679,9 @@ const Map = () => {
               <button onClick={findOptimalPosition}>Find Optimal Position</button>
               <button onClick={retrieveMarkers}>Retrieve Markers</button>
               <button onClick={retrieveAreas}>Retrieve Areas</button>
+              <button onClick={calculateMoransI}>Calculate Moran's I</button>
+              {moransI !== null && <p>Moran's I index: {moransI}</p>}
+
           </div>
           <div className='selected-list'>
               <h2>Selected Markers</h2>
@@ -603,7 +691,7 @@ const Map = () => {
                     <h4>Marker {index}</h4>
                     <li>{marker.getLatLng().toString()}</li>
                     <li>Neighborhood: {marker.options.neighborhood}</li>
-                    <li>Satisfaction: <span style={{ color: marker.options.color.toString() }}>{marker.options.color.toString()}</span></li>
+                    <li>Satisfaction: <span style={{ color: marker.options.color.toString() }}>{marker.options.satisfaction.toString()}%</span></li>
                     <div>
                       <label htmlFor={`time-${index}`}>Tempo:</label>
                       <input placeholder='min.' type="text" id={`time-${index}`} name="time" />
@@ -624,6 +712,11 @@ const Map = () => {
                         <button onClick={() => removeFilteredPoints(marker)}>Remove Filtered</button>
                       )}
                     </div>
+                    {marker.options.price !== null && (
+                      <li>Price: {marker.options.price}</li>
+                      )}
+                    <input type="text" id={`price-${index}`} name="price" placeholder="Price" />
+                    <button onClick={() => setPrice(marker, document.getElementById(`price-${index}`).value)}>Set Price</button>
                     <button onClick={() => removeMarker(marker)}>Remove</button>
                     <button onClick={() => storeMarker(marker)}>Store</button>
                   </React.Fragment>    
@@ -635,7 +728,7 @@ const Map = () => {
                       <React.Fragment key={index}>
                         <h4>Area {index}</h4>
                         <li>{area.getLatLng().toString()} - {area.getRadius()}</li>
-                        <li>Satisfaction: <span style={{ color: area.options.color.toString() }}>{area.options.color.toString()}</span></li>
+                        <li>Satisfaction: <span style={{ color: area.options.color.toString() }}>{area.options.satisfaction.toString()}%</span></li>
                         <button onClick={() => removeArea(area)}>Remove</button>
                         <button onClick={() => storeArea(area)}>Store</button>
                       </React.Fragment>
