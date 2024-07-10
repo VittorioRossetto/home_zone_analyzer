@@ -17,4 +17,4 @@ COPY . .
 EXPOSE 9000
 
 # Start the backend application
-CMD ["nodemon", "index.js"]
+CMD ["node", "index.js"]

@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: backend
-        image: your-docker-username/backend:latest
+        image: vittoriorossetto/backend:latest
         ports:
         - containerPort: 9000
         env:

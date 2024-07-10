@@ -10,6 +10,7 @@ const Map = () => {
   
   const mapContainer = useRef(null);
   const map = useRef(null);
+  const hostName = 'http://localhost:9000'; // Change to 'http://localhost:9000' if running locally
 
   // Coordinate of Bologna
   // eslint-disable-next-line
@@ -303,7 +304,7 @@ const Map = () => {
 
   // Fetch the PoI data from the server when the component mounts
   useEffect(() => {
-      fetchPoIData('http://localhost:9000/data/api/poi_data').then(data => setPoiData(data));
+      fetchPoIData(hostName + '/data/api/poi_data').then(data => setPoiData(data));
   }, []);
 
   // Add the click event listener to the map after the PoI data has been loaded
@@ -402,7 +403,7 @@ const Map = () => {
     };
     
     // Send a POST request to the server to store the marker data
-    fetch('http://localhost:9000/data/api/lista_immobili', {
+    fetch(hostName + '/data/api/lista_immobili', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -430,7 +431,7 @@ const Map = () => {
     };
 
     // Send a POST request to the server to store the area data
-    fetch('http://localhost:9000/data/api/lista_aree', {
+    fetch(hostName + '/data/api/lista_aree', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -447,7 +448,7 @@ const Map = () => {
   // Function to retrieve markers from the database
   const retrieveMarkers = () => {
     // Fetch the markers from the server
-    fetch('http://localhost:9000/data/api/lista_immobili')
+    fetch(hostName + '/data/api/lista_immobili')
     .then(response => response.json())
     .then(data => 
       data.forEach(marker => {
@@ -475,7 +476,7 @@ const Map = () => {
 
   // Function to retrieve areas from the database
   const retrieveAreas = () => {
-    fetch('http://localhost:9000/data/api/lista_aree')
+    fetch(hostName + '/data/api/lista_aree')
     .then(response => response.json())
     .then(data => 
       data.forEach(area => {

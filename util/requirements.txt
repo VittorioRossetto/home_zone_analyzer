@@ -1,5 +1,0 @@
-json
-os
-time
-python-dotenv
-psycopg2

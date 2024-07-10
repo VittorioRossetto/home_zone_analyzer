@@ -4,6 +4,8 @@ import './css/survey.css';
 
 const Menu = () => {
     const navigate = useNavigate(); 
+    const hostName = 'http://localhost:9000'; // Change to 'http://localhost:9000' if running locally
+
 
     // Function to handle the slider change event
     const handleSliderChange = (event) => {
@@ -15,7 +17,7 @@ const Menu = () => {
 
     // Fetch the POI data when the component mounts
     useEffect(() => {
-        fetch('http://localhost:9000/data/api/poi_data', {
+        fetch(hostName + '/data/api/poi_data', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -98,7 +100,7 @@ const Menu = () => {
         //console.log(jsonData); // Uncomment to see the JSON data
 
         // Send the JSON data to the backend
-        fetch('http://localhost:9000/data/api/survey', {
+        fetch(hostName + '/data/api/survey', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
