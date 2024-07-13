@@ -10,7 +10,7 @@ const Map = () => {
   
   const mapContainer = useRef(null);
   const map = useRef(null);
-  const hostName = 'http://localhost:9000'; // Change to 'http://localhost:9000' if running locally
+  const hostName = 'http://localhost:9000'; // Change to 'http://localhost:9000' if running locally or 'http://backend:9000' if running in Docker
 
   // Coordinate of Bologna
   // eslint-disable-next-line
@@ -42,7 +42,7 @@ const Map = () => {
   // useEffect to log the form data on mount
   useEffect(() => {
     if (!formData) return;
-    //console.log('Form data received:', formData); // Uncomment to log the form data
+    console.log('Form data received:', formData); // Uncomment to log the form data
   }, [formData]);
 
 
@@ -232,6 +232,28 @@ const Map = () => {
       satisfaction: sat.satisfaction,
       price: null
     }).addTo(map.current); // Add the marker to the map
+    const id = selectedMarkers.length;
+    // Add a popup with informations on the marker
+    marker.bindPopup(`<b>Marker ${id}</b><b>Optimal Position</b><br>${optimalPosition.toString()}<br>Neighborhood: ${neighborhood.current}<br>Satisfaction: ${sat.satisfaction}%`);
+    
+    // Show the neighborhood on map on hover
+    marker.on('mouseover', function (e) {
+      L.circle(e.latlng, {
+        radius: neighborhood.current,
+        color: 'blue',
+        fillOpacity: 0.1
+      }).addTo(map.current);
+    });
+
+    // Remove the neighborhood on mouseout
+    marker.on('mouseout', function (e) {
+      map.current.eachLayer(function (layer) {
+        if (layer instanceof L.Circle) {
+          map.current.removeLayer(layer);
+        }
+      });
+    });
+
     setSelectedMarkers(prevMarkers => [...prevMarkers,  marker]); // Add the marker to the selectedMarkers array
     return marker; // Return the marker
   };
@@ -254,6 +276,30 @@ const Map = () => {
           satisfaction: sat.satisfaction,
           price: null,
       }).addTo(map.current);  
+      const id = selectedMarkers.length;
+
+    // Add a popup with informations on the marker
+    marker.bindPopup(`<b>Marker ${id}</b><br>${e.latlng.toString()}<br>Neighborhood: ${neighborhood.current}<br>Satisfaction: ${sat.satisfaction}%`);    
+    marker.openPopup(); //Show the popup
+
+    // Show the neighborhood on map on hover
+    marker.on('mouseover', function (e) {
+      L.circle(e.latlng, {
+        radius: neighborhood.current,
+        color: 'blue',
+        fillOpacity: 0.1
+      }).addTo(map.current);
+    });
+
+    // Remove the neighborhood on mouseout
+    marker.on('mouseout', function (e) {
+      map.current.eachLayer(function (layer) {
+        if (layer instanceof L.Circle) {
+          map.current.removeLayer(layer);
+        }
+      });
+    });
+
 
     // Add the marker to the selectedMarkers array  
     setSelectedMarkers(prevMarkers => [...prevMarkers,  marker]);
@@ -279,6 +325,9 @@ const Map = () => {
       const sat = setMarkerColor(areaCenter.current, radius); // choose color based on center and radius
       const newCircle = L.circle(areaCenter.current, { radius: radius, color: sat.color, satisfaction: sat.satisfaction }).addTo(map.current); // create the circle with chosen color
       //console.log("Area:", newCircle); // Uncomment to log the area
+      const id = areas.length;
+      // Add a popup with informations on the area
+      newCircle.bindPopup(`<b>Area ${id}</b><br>${areaCenter.current.toString()} - ${radius}<br>Satisfaction: ${sat.satisfaction}%`);
       setAreas(prevAreas => [...prevAreas, newCircle]); // add the circle to the areas array
       drawing.current = false;
     }
@@ -400,6 +449,7 @@ const Map = () => {
       latitude: latlng.lat,
       longitude: latlng.lng,
       neighborhood: marker.options.neighborhood,
+      price: marker.options.price
     };
     
     // Send a POST request to the server to store the marker data
@@ -463,9 +513,31 @@ const Map = () => {
           fillOpacity: 0.8,
           neighborhood: marker.neighborhood,
           filteredPoints: [],
-          price: null,
+          price: marker.price,
           satisfaction: sat.satisfaction
         }).addTo(map.current);
+        const id = selectedMarkers.length;
+        // Add a popup with informations on the marker
+        newMarker.bindPopup(`<b>Marker ${id}</b><br>${latlng.toString()}<br>Neighborhood: ${marker.neighborhood}<br>Satisfaction: ${sat.satisfaction}%`);
+        
+        // Show the neighborhood on map on hover
+        marker.on('mouseover', function (e) {
+          L.circle(e.latlng, {
+            radius: neighborhood.current,
+            color: 'blue',
+            fillOpacity: 0.1
+          }).addTo(map.current);
+        });
+
+        // Remove the neighborhood on mouseout
+        marker.on('mouseout', function (e) {
+          map.current.eachLayer(function (layer) {
+            if (layer instanceof L.Circle) {
+              map.current.removeLayer(layer);
+            }
+          });
+        });
+        
         setSelectedMarkers(prevMarkers => [...prevMarkers,  newMarker]); // Add the marker to the selectedMarkers array
       }
     ))
@@ -483,6 +555,9 @@ const Map = () => {
         const latlng = L.latLng(area.latitude, area.longitude);
         const sat = setMarkerColor(latlng, area.radius);
         const newArea = L.circle(latlng, { radius: area.radius, color: sat.color, satisfaction: sat.satisfaction }).addTo(map.current);
+        const id = areas.length;
+        // Add a popup with informations on the area
+        newArea.bindPopup(`<b>Area ${id}</b><br>${latlng.toString()} - ${area.radius}<br>Satisfaction: ${sat.satisfaction}%`);
         setAreas(prevAreas => [...prevAreas, newArea]);
       }
     ))
@@ -579,12 +654,14 @@ const Map = () => {
   const calculateMoransI = (e) => {
     e.preventDefault();
     const prices = []
-    const proximities = []
+    const positions = []
+    const neighborhoods = []
 
     for (const marker of selectedMarkers) {
       if (marker.options.price !== null) {
         prices.push(marker.options.price);
-        proximities.push(marker.options.satisfaction);
+        positions.push(marker.getLatLng());
+        neighborhoods.push(marker.options.neighborhood)
       }
     }
 
@@ -600,12 +677,10 @@ const Map = () => {
     const weightMatrix = Array.from({ length: N }, () => Array(N).fill(0));
     for (let i = 0; i < N; i++) {
       for (let j = 0; j < N; j++) {
-        if (i !== j) {
           // Weight as the product of normalized proximities
-          weightMatrix[i][j] = (proximities[i] / 100) * (proximities[j] / 100);
+          weightMatrix[i][j] = positions[i].distanceTo(positions[j]) < neighborhoods[i] ? 1 : 0;
         }
       }
-    }
   
     // Calculate the numerator
     let numerator = 0;

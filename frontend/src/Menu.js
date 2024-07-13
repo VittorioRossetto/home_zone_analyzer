@@ -4,7 +4,7 @@ import './css/survey.css';
 
 const Menu = () => {
     const navigate = useNavigate(); 
-    const hostName = 'http://localhost:9000'; // Change to 'http://localhost:9000' if running locally
+    const hostName = 'http://localhost:9000'; // Change to 'http://localhost:9000' if running locally or 'http://backend:9000' if running in Docker
 
 
     // Function to handle the slider change event
@@ -108,16 +108,34 @@ const Menu = () => {
             body: JSON.stringify(jsonData),
         })
 
+        // Redirect to the map page with the JSON data as state
         navigate('/map', { state: jsonData });
         // Reset the form
         form.reset();
+    }
+
+    const retrieveLastPreferences = async () => {
+        // Fetch the last preferences from the backend
+        const response = await fetch(hostName + '/data/api/survey');
+        const data = await response.json();
+        // create a JSON object with the last preferences
+        const jsonData = {};
+        for (let key in data[0]) {
+            if (key !== 'id') {
+                jsonData[key] = { value: parseInt(data[0][key], 10), count: getCountForKey(key) };
+            }
+        }
+        //console.log(jsonData); // Uncomment to see the JSON data
+        // Redirect to the map page with the JSON data as state
+        navigate('/map', { state: jsonData });
     }
 
 
     return (
         <div className="dropdown">
             <h1>Home Zone Analyzer</h1>
-            <p>Questo questionario ti permetterà di esprimere la tua opinione riguardo le caratteristiche del tuo vicinato.</p>
+            <p>Questo questionario ti permetterà di esprimere la tua opinione riguardo le caratteristiche del tuo vicinato. Utilizza il pulsante per utilizzare le ultime preferenze inserite.</p>
+            <button onClick={retrieveLastPreferences}>Recupera le ultime preferenze</button>
             <form id="survey-form" onSubmit={handleSubmit}>
                 <label htmlFor="slider-Biblioteca">Quanto è importante la presenza di una biblioteca nel vicinato:</label>
                 <input type="range" id="slider-Biblioteca" name="Biblioteca" min="0" max="5" defaultValue="0" />

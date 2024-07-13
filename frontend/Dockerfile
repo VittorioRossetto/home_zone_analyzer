@@ -1,27 +1,19 @@
-# Use the official Node.js image as the base image
-FROM node:14
+FROM node:14.15.4
 
-# Set the working directory
+# Set the working directory.
 WORKDIR /app
 
-# Copy the package.json and package-lock.json
-COPY package*.json ./
+# Copy the package.json file.
+COPY package*.json .
 
-# Install the dependencies
+# Install application dependencies.
 RUN npm install
 
-# Copy the rest of the application code
+# Copy the rest of the application files.
 COPY . .
 
-# Build the React application
-RUN npm run build
-
-# Use a separate image to serve the built application
-FROM nginx:alpine
-COPY --from=0 /app/build /usr/share/nginx/html
-
-# Expose the port the app runs on
+# Expose the port.
 EXPOSE 3000
 
-# Start Nginx server
-CMD ["nginx", "-g", "daemon off;"]
+# Run the application.
+CMD ["npm", "start"]

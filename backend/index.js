@@ -16,6 +16,6 @@ app.use("/data", require("./routes/poi_data"));
 
 app.listen(9000, () => 
     {
-        console.log("server started on http://localhost:9000/");
+        console.log("server started on http://localhost:9000/"); // This message will be displayed in the console when the server starts
     }
 );
