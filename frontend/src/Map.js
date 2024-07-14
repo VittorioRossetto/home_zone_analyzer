@@ -10,7 +10,7 @@ const Map = () => {
   
   const mapContainer = useRef(null);
   const map = useRef(null);
-  const hostName = 'http://localhost:9000'; // Change to 'http://localhost:9000' if running locally or 'http://backend:9000' if running in Docker
+  const hostName = 'http://localhost:30001'; // Change to 'http://localhost:9000' if running locally or 'http://backend:9000' if running in Docker
 
   // Coordinate of Bologna
   // eslint-disable-next-line
@@ -415,6 +415,8 @@ const Map = () => {
       return;
     } else {
       neighborhood.current = neighborhoodValue;
+      // Alert the user that the neighborhood has been set
+      alert(`Neighborhood set to ${neighborhood.current}`);
     }
   };
 
@@ -463,6 +465,8 @@ const Map = () => {
     .then(response => response.json())
     .then(data =>
       console.log('Success:', data))
+      // Alert the user that the marker has been stored
+    .then(() => alert('Marker stored successfully!'))
     .catch((error) => {
       console.error('Error:', error);
     });

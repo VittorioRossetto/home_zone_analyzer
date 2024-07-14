@@ -4,7 +4,7 @@ import './css/survey.css';
 
 const Menu = () => {
     const navigate = useNavigate(); 
-    const hostName = 'http://localhost:9000'; // Change to 'http://localhost:9000' if running locally or 'http://backend:9000' if running in Docker
+    const hostName = 'http://localhost:30001'; // Change to 'http://localhost:9000' if running locally or 'http://backend:9000' if running in Docker
 
 
     // Function to handle the slider change event

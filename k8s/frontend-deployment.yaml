@@ -13,10 +13,10 @@ spec:
         app: frontend
     spec:
       containers:
-      - name: frontend
-        image: vittoriorossetto/frontend:latest
-        ports:
-        - containerPort: 3000
+        - name: frontend
+          image: vittoriorossetto/frontend:latest
+          ports:
+            - containerPort: 3000
 
 ---
 apiVersion: v1
