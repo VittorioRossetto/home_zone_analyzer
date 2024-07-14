@@ -26,7 +26,7 @@ This platform is designed to assist users in making informed decisions when purc
 - **Front-end**: Leaflet for mapping interfaces, React.js for responsive UI.
 - **Containerization**: Docker for creating and managing containers, Kubernetes for orchestration.
 
-## Getting Started
+## Getting Started (Docker)
 
 ### Prerequisites
 - Docker
@@ -37,14 +37,43 @@ This platform is designed to assist users in making informed decisions when purc
 1. **Clone the repository**:
     `git clone <repository-url>`
 2. **Navigate to the project directory**:
-    `cd <project-name>`
-3. **Navigate to the project directory**:
-    `cd <project-name>`
+    `cd home_zone_analyzer`
+
 4. **Build and run the Docker containers on kubernetes**:
     `bash k8sbuilder.sh`
 
 ### Usage
 After setting up the project, you can access the web interface at `http://<your node-ip>:30002`. Use the interface to specify your preferences and explore property suggestions.
+
+## Getting Started (Local)
+To run application locally, you have to change hostName to `http://localhost:9000` in both `./frontend/src/Map.js` and `./frontend/src/Menu.js`
+
+### Prerequisites
+- Node.js
+- PostgreSQL
+
+### Setup Backend
+1. **Clone the repository**:
+    `git clone <repository-url>`
+2. **Navigate to the project directory**:
+    `cd home_zone_analyzer`
+3. **Navigate to the backend directory**:
+    `cd backend`
+4. **Install backend dependencies**:
+    `npm install`
+5. **Run backend**:
+    `nodemon index`
+
+### Setup frontend (Another prompt)
+1. **Navigate to the frontend directory**:
+    `cd home_zone_analyzer/frontend`
+2. **install frontend dependencies**:
+    `npm install`
+3. **Run frontend**
+    `npm start`
+
+### Usage
+After setting up the project, you can access the web interface at `http://localhost:3000`. Use the interface to specify your preferences and explore property suggestions.
 
 ### Further Informations
 For a deep understanding of the platform and its functionalities check `ProjectReport.pdf`
